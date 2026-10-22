@@ -1,0 +1,10 @@
+{
+  "name": "OSUNNOTE",
+  "short_name": "OSUNNOTE",
+  "description": "오래 쓰는 사람의 local-first 작업실",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f1e8",
+  "theme_color": "#f5f1e8",
+  "lang": "ko"
+}
