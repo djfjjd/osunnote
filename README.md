@@ -13,6 +13,12 @@ npm run dev
 
 검증은 `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 순서로 실행합니다.
 
+## 웹 배포
+
+`main` 브랜치에 push하면 GitHub Actions가 검사와 빌드를 수행한 후 GitHub Pages에 배포합니다.
+저장소의 **Settings → Pages → Build and deployment → Source**는 `GitHub Actions`로 설정해야 합니다.
+배포 주소는 `https://djfjjd.github.io/osunnote/`입니다.
+
 ## 현재 구현
 
 - 프로젝트/폴더/문서 탐색과 검색
