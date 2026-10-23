@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArchiveRestore, BookOpen, Check, ChevronDown, Circle, Clock3, Download, FilePlus2,
   Folder, Focus, Hash, HelpCircle, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
-  PanelRightClose, PencilLine, Search, Settings2, ShieldCheck, Sparkles, Trash2,
-  Wifi, WifiOff, X,
+  PanelRightClose, PencilLine, RotateCcw, Search, Settings2, ShieldCheck, Sparkles,
+  Trash2, Wifi, WifiOff, X,
 } from "lucide-react";
 import {
   countCharacters, createDocument, initialWorkspace, saveDocument, searchDocuments,
@@ -31,6 +31,8 @@ export function App() {
   const [online, setOnline] = useState(navigator.onLine);
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [view, setView] = useState<"documents" | "trash">("documents");
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() =>
     new URLSearchParams(window.location.search).has("welcome") || localStorage.getItem("osunnote-welcome-seen") !== "yes",
   );
@@ -78,6 +80,7 @@ export function App() {
   const project = workspace.projects.find((item) => item.id === workspace.activeProjectId) ?? workspace.projects[0]!;
   const document = project.documents.find((item) => item.id === workspace.activeDocumentId) ?? project.documents[0]!;
   const liveDocuments = project.documents.filter((item) => !item.deletedAt);
+  const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
   const folders = [...new Set(filtered.map((item) => item.folder))];
   const characters = countCharacters(document.content);
@@ -85,6 +88,7 @@ export function App() {
 
   const selectDocument = (id: string) => {
     setWorkspace((current) => ({ ...current, activeDocumentId: id }));
+    setView("documents");
     setMobileMenu(false);
   };
 
@@ -104,6 +108,7 @@ export function App() {
       ...current, revision: current.revision + 1, activeDocumentId: created.id,
       projects: current.projects.map((item) => item.id === project.id ? { ...item, documents: [...item.documents, created] } : item),
     }));
+    setView("documents");
     setMobileMenu(false);
   };
 
@@ -118,6 +123,44 @@ export function App() {
 
   const restoreVersion = (content: string) => updateDocument({ content }, true);
 
+  const restoreDocument = (documentId: string) => {
+    setWorkspace((current) => saveDocument(current, documentId, { deletedAt: undefined } as Partial<WritingDocument>));
+  };
+
+  const deleteForever = (documentId: string) => {
+    const target = deletedDocuments.find((item) => item.id === documentId);
+    if (!target || !window.confirm(`‘${target.title}’ 글을 영구 삭제할까요? 이 작업은 되돌릴 수 없습니다.`)) return;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === project.id
+        ? { ...item, documents: item.documents.filter((entry) => entry.id !== documentId) }
+        : item),
+    }));
+  };
+
+  const emptyTrash = () => {
+    if (deletedDocuments.length === 0 || !window.confirm(`휴지통의 글 ${deletedDocuments.length}개를 모두 영구 삭제할까요?`)) return;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === project.id
+        ? { ...item, documents: item.documents.filter((entry) => !entry.deletedAt) }
+        : item),
+    }));
+  };
+
+  const renameProject = () => {
+    const title = window.prompt("프로젝트 이름", project.title)?.trim();
+    if (!title || title === project.title) return;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === project.id ? { ...item, title } : item),
+    }));
+    setProjectMenuOpen(false);
+  };
+
   const closeWelcome = (focusEditor = false) => {
     localStorage.setItem("osunnote-welcome-seen", "yes");
     setShowWelcome(false);
@@ -131,9 +174,18 @@ export function App() {
       <header className="topbar">
         <button className="icon-button mobile-only" aria-label="메뉴 열기" onClick={() => setMobileMenu(true)}><Menu /></button>
         <div className="brand"><span className="brand-mark">O</span><span>{ko.appName}</span></div>
-        <button className="project-switcher" aria-label="프로젝트 바꾸기">
+        <button className={`project-switcher ${projectMenuOpen ? "open" : ""}`} aria-label="프로젝트 메뉴 열기" aria-expanded={projectMenuOpen} onClick={() => setProjectMenuOpen((value) => !value)}>
           <span>{project.title}</span><ChevronDown size={15} />
         </button>
+        {projectMenuOpen && (
+          <div className="project-menu">
+            <span className="project-menu-label">현재 프로젝트</span>
+            <strong>{project.title}</strong>
+            <p>{project.description}</p>
+            <div><span>{liveDocuments.length}개 글</span><span>{liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자</span></div>
+            <button onClick={renameProject}><PencilLine size={14} />프로젝트 이름 바꾸기</button>
+          </div>
+        )}
         <div className="topbar-actions">
           <div className={`save-state ${saveState}`}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
@@ -153,7 +205,7 @@ export function App() {
         <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
         <button className="new-button" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
         <nav className="navigation" aria-label="문서 탐색">
-          <button className="nav-item active"><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
+          <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => setView("documents")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
           <button className="nav-item"><Hash size={17} />태그</button>
         </nav>
@@ -184,7 +236,7 @@ export function App() {
           {filtered.length === 0 && <p className="empty-search">검색 결과가 없습니다.</p>}
         </div>
         <div className="sidebar-footer">
-          <button className="nav-item"><Trash2 size={17} />{ko.trash}<span>{project.documents.filter((item) => item.deletedAt).length}</span></button>
+          <button className={`nav-item ${view === "trash" ? "active" : ""}`} onClick={() => { setView("trash"); setMobileMenu(false); }}><Trash2 size={17} />{ko.trash}<span>{deletedDocuments.length}</span></button>
           <button className="nav-item"><Settings2 size={17} />설정</button>
         </div>
         <button className="collapse-handle" onClick={() => setLeftOpen(false)} aria-label="왼쪽 패널 닫기"><PanelLeftClose size={16} /></button>
@@ -192,7 +244,30 @@ export function App() {
       {mobileMenu && <button className="scrim" aria-label="메뉴 닫기" onClick={() => setMobileMenu(false)} />}
       {!leftOpen && !focus && <button className="edge-open left-open" onClick={() => setLeftOpen(true)} aria-label="왼쪽 패널 열기"><Menu size={18} /></button>}
 
-      <main className="editor-shell">
+      <main className={`editor-shell ${view === "trash" ? "trash-view" : ""}`}>
+        {view === "trash" ? (
+          <section className="trash-page">
+            <header>
+              <div><span className="trash-eyebrow">보관함</span><h1>휴지통</h1><p>삭제한 글은 이 기기에 남아 있으며 언제든 복원할 수 있습니다.</p></div>
+              <button className="empty-trash-button" onClick={emptyTrash} disabled={deletedDocuments.length === 0}><Trash2 size={16} />휴지통 비우기</button>
+            </header>
+            {deletedDocuments.length === 0 ? (
+              <div className="trash-empty"><span><Trash2 size={24} /></span><strong>휴지통이 비어 있습니다</strong><p>삭제한 글이 이곳에 표시됩니다.</p><button onClick={() => setView("documents")}>모든 글로 돌아가기</button></div>
+            ) : (
+              <div className="trash-list">
+                {deletedDocuments.map((item) => (
+                  <article key={item.id}>
+                    <div><strong>{item.title}</strong><p>{item.folder} · {countCharacters(item.content).toLocaleString()}자 · {new Date(item.deletedAt!).toLocaleDateString("ko-KR")} 삭제</p></div>
+                    <div className="trash-actions">
+                      <button className="restore-button" onClick={() => restoreDocument(item.id)}><RotateCcw size={15} />복원</button>
+                      <button className="delete-forever-button" onClick={() => deleteForever(item.id)}><Trash2 size={15} />영구 삭제</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (<>
         <div className="document-header">
           <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
           <div className="document-tools">
@@ -207,9 +282,10 @@ export function App() {
           <textarea ref={editorRef} value={document.content} onChange={(event) => updateBody(event.target.value)} spellCheck aria-label="본문 편집기" placeholder="여기를 눌러 이야기를 시작하세요. Markdown 문법도 사용할 수 있어요." />
         </article>
         <footer className="editor-footer"><span>{characters.toLocaleString()}자</span><span>약 {Math.max(1, Math.ceil(characters / 600))}분 읽기</span><span>Markdown</span></footer>
+        </>)}
       </main>
 
-      <aside className={`sidebar right ${rightOpen ? "" : "collapsed"}`}>
+      <aside className={`sidebar right ${rightOpen && view === "documents" ? "" : "collapsed"}`}>
         <div className="inspector-title"><span>{ko.details}</span><button className="icon-button" aria-label="글 정보 닫기" onClick={() => setRightOpen(false)}><X size={16} /></button></div>
         <section className="inspector-section goal-card">
           <div className="section-head"><span>오늘의 목표</span><strong>{progress}%</strong></div>
@@ -237,7 +313,7 @@ export function App() {
           <button onClick={() => download(`${document.title}.txt`, document.content)}>{ko.export}</button>
         </section>
       </aside>
-      {!rightOpen && !focus && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
+      {!rightOpen && !focus && view === "documents" && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
 
       {showWelcome && (
         <div className="welcome-backdrop" role="presentation">
