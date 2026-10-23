@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArchiveRestore, BookOpen, Check, ChevronDown, Circle, Clock3, Download, FilePlus2,
-  Folder, Focus, Hash, Menu, MoreHorizontal, PanelLeftClose, PanelRightClose, Search,
-  Settings2, Sparkles, Trash2, Wifi, WifiOff, X,
+  Folder, Focus, Hash, HelpCircle, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
+  PanelRightClose, PencilLine, Search, Settings2, ShieldCheck, Sparkles, Trash2,
+  Wifi, WifiOff, X,
 } from "lucide-react";
 import {
   countCharacters, createDocument, initialWorkspace, saveDocument, searchDocuments,
@@ -30,11 +31,34 @@ export function App() {
   const [online, setOnline] = useState(navigator.onLine);
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() =>
+    new URLSearchParams(window.location.search).has("welcome") || localStorage.getItem("osunnote-welcome-seen") !== "yes",
+  );
   const lastSnapshotAt = useRef(0);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     readWorkspace().then((stored) => { if (stored) setWorkspace(stored); setReady(true); }).catch(() => setReady(true));
   }, []);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (event.key.toLocaleLowerCase() === "k") {
+        event.preventDefault();
+        setLeftOpen(true);
+        setMobileMenu(true);
+        window.setTimeout(() => searchRef.current?.focus(), 0);
+      }
+      if (event.key.toLocaleLowerCase() === "n") {
+        event.preventDefault();
+        addDocument();
+      }
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  });
 
   useEffect(() => {
     if (!ready) return;
@@ -94,6 +118,12 @@ export function App() {
 
   const restoreVersion = (content: string) => updateDocument({ content }, true);
 
+  const closeWelcome = (focusEditor = false) => {
+    localStorage.setItem("osunnote-welcome-seen", "yes");
+    setShowWelcome(false);
+    if (focusEditor) window.setTimeout(() => editorRef.current?.focus(), 0);
+  };
+
   if (!ready) return <div className="loading"><span className="brand-mark">O</span><p>작업실을 여는 중…</p></div>;
 
   return (
@@ -112,6 +142,7 @@ export function App() {
           <button className="icon-button" aria-label={online ? "온라인" : ko.offline} title={online ? "온라인" : ko.offline}>
             {online ? <Wifi size={17} /> : <WifiOff size={17} />}
           </button>
+          <button className="text-button help-button" onClick={() => setShowWelcome(true)}><HelpCircle size={17} />도움말</button>
           <button className="text-button" onClick={() => setFocus((value) => !value)}><Focus size={17} />{focus ? "나가기" : ko.focus}</button>
           <button className="avatar" aria-label="계정 메뉴">윤</button>
         </div>
@@ -119,7 +150,7 @@ export function App() {
 
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="sidebar-mobile-head"><div className="brand"><span className="brand-mark">O</span>{ko.appName}</div><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
-        <div className="search-box"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
+        <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
         <button className="new-button" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
         <nav className="navigation" aria-label="문서 탐색">
           <button className="nav-item active"><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
@@ -154,21 +185,21 @@ export function App() {
         <div className="document-header">
           <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
           <div className="document-tools">
-            <button className="icon-button" aria-label="Markdown으로 내보내기" onClick={() => download(`${document.title}.md`, document.content, "text/markdown")}><Download size={17} /></button>
-            <button className="icon-button danger" aria-label="휴지통으로 이동" onClick={moveToTrash}><Trash2 size={16} /></button>
+            <button className="tool-button" aria-label="Markdown으로 내보내기" onClick={() => download(`${document.title}.md`, document.content, "text/markdown")}><Download size={16} /><span>저장</span></button>
+            <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={moveToTrash}><Trash2 size={15} /><span>삭제</span></button>
             <button className="icon-button desktop-only" aria-label="오른쪽 패널 닫기" onClick={() => setRightOpen((value) => !value)}><PanelRightClose size={17} /></button>
           </div>
         </div>
         <article className="editor">
           <input className="title-input" value={document.title} onChange={(event) => updateDocument({ title: event.target.value })} aria-label="글 제목" />
           <div className="meta-line"><span className={`status-pill ${statusTone[document.status]}`}>{statusLabel[document.status]}</span><span>{new Date(document.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })} 수정</span></div>
-          <textarea value={document.content} onChange={(event) => updateBody(event.target.value)} spellCheck aria-label="본문 편집기" placeholder="이야기를 시작해 보세요…" />
+          <textarea ref={editorRef} value={document.content} onChange={(event) => updateBody(event.target.value)} spellCheck aria-label="본문 편집기" placeholder="여기를 눌러 이야기를 시작하세요. Markdown 문법도 사용할 수 있어요." />
         </article>
         <footer className="editor-footer"><span>{characters.toLocaleString()}자</span><span>약 {Math.max(1, Math.ceil(characters / 600))}분 읽기</span><span>Markdown</span></footer>
       </main>
 
       <aside className={`sidebar right ${rightOpen ? "" : "collapsed"}`}>
-        <div className="inspector-title"><span>{ko.details}</span><button className="icon-button" onClick={() => setRightOpen(false)}><X size={16} /></button></div>
+        <div className="inspector-title"><span>{ko.details}</span><button className="icon-button" aria-label="글 정보 닫기" onClick={() => setRightOpen(false)}><X size={16} /></button></div>
         <section className="inspector-section goal-card">
           <div className="section-head"><span>오늘의 목표</span><strong>{progress}%</strong></div>
           <div className="progress"><i style={{ width: `${progress}%` }} /></div>
@@ -196,6 +227,27 @@ export function App() {
         </section>
       </aside>
       {!rightOpen && !focus && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
+
+      {showWelcome && (
+        <div className="welcome-backdrop" role="presentation">
+          <section className="welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+            <button className="welcome-close" aria-label="시작 안내 닫기" onClick={() => closeWelcome()}><X size={18} /></button>
+            <div className="welcome-eyebrow"><span className="brand-mark">O</span><span>OSUNNOTE 시작 가이드</span></div>
+            <h1 id="welcome-title">복잡한 설정 없이,<br />바로 쓰기 시작하세요.</h1>
+            <p className="welcome-lead">글은 이 기기에 자동으로 저장됩니다. 처음에는 아래 세 가지만 기억하면 충분해요.</p>
+            <div className="welcome-steps">
+              <article><span><PencilLine size={19} /></span><div><strong>1. 제목과 본문 쓰기</strong><p>가운데 편집 영역을 누르고 자유롭게 작성하세요.</p></div></article>
+              <article><span><ShieldCheck size={19} /></span><div><strong>2. 자동 저장 확인</strong><p>상단의 ‘이 기기에 저장됨’ 표시가 글을 지켜줍니다.</p></div></article>
+              <article><span><Keyboard size={19} /></span><div><strong>3. 빠르게 찾고 추가하기</strong><p><kbd>⌘K</kbd>로 검색하고 <kbd>⌘N</kbd>으로 새 글을 만드세요.</p></div></article>
+            </div>
+            <div className="welcome-actions">
+              <button className="welcome-secondary" onClick={() => { addDocument(); closeWelcome(true); }}><FilePlus2 size={17} />새 글부터 만들기</button>
+              <button className="welcome-primary" onClick={() => closeWelcome(true)}>현재 글에서 시작하기 <span>→</span></button>
+            </div>
+            <small>도움말 버튼에서 언제든 이 안내를 다시 볼 수 있어요.</small>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
