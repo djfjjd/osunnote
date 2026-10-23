@@ -5,7 +5,7 @@ export default defineConfig(({ command }) => ({
   base: command === "build" ? (process.env.VITE_BASE_PATH ?? "/") : "/",
   plugins: [react()],
   build: {
-    outDir: "../../dist",
+    outDir: "dist",
     emptyOutDir: true,
   },
   server: { port: 4173 },

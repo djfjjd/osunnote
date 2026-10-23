@@ -6,7 +6,7 @@
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "npm run dev -w @osunnote/web",
-    "build": "npm run build -w @osunnote/web",
+    "build": "npm run build -w @osunnote/web && node scripts/mirror-web-dist.mjs",
     "lint": "npm run lint -w @osunnote/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
