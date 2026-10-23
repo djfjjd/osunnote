@@ -107,13 +107,13 @@ export function App() {
     setMobileMenu(false);
   };
 
-  const moveToTrash = () => {
-    const next = liveDocuments.find((item) => item.id !== document.id);
+  const moveToTrash = (documentId = document.id) => {
+    const next = liveDocuments.find((item) => item.id !== documentId);
     if (!next) return;
-    setWorkspace((current) => ({
-      ...saveDocument(current, document.id, { deletedAt: Date.now() } as Partial<WritingDocument>),
-      activeDocumentId: next.id,
-    }));
+    setWorkspace((current) => {
+      const updated = saveDocument(current, documentId, { deletedAt: Date.now() } as Partial<WritingDocument>);
+      return documentId === current.activeDocumentId ? { ...updated, activeDocumentId: next.id } : updated;
+    });
   };
 
   const restoreVersion = (content: string) => updateDocument({ content }, true);
@@ -163,10 +163,21 @@ export function App() {
             <section key={folder}>
               <div className="folder-row"><Folder size={16} /><span>{folder}</span><span>{filtered.filter((item) => item.folder === folder).length}</span></div>
               {filtered.filter((item) => item.folder === folder).map((item) => (
-                <button key={item.id} className={`document-row ${item.id === document.id ? "selected" : ""}`} onClick={() => selectDocument(item.id)}>
-                  <span className={`status-dot ${statusTone[item.status]}`} />
-                  <span><strong>{item.title}</strong><small>{countCharacters(item.content).toLocaleString()}자 · {statusLabel[item.status]}</small></span>
-                </button>
+                <div key={item.id} className={`document-row ${item.id === document.id ? "selected" : ""}`}>
+                  <button className="document-select" onClick={() => selectDocument(item.id)} aria-label={`${item.title} 열기`}>
+                    <span className={`status-dot ${statusTone[item.status]}`} />
+                    <span className="document-copy"><strong>{item.title}</strong><small>{countCharacters(item.content).toLocaleString()}자 · {statusLabel[item.status]}</small></span>
+                  </button>
+                  <button
+                    className="document-delete"
+                    onClick={() => moveToTrash(item.id)}
+                    disabled={liveDocuments.length <= 1}
+                    aria-label={`${item.title} 휴지통으로 이동`}
+                    title={liveDocuments.length <= 1 ? "마지막 글은 삭제할 수 없습니다" : "휴지통으로 이동"}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </section>
           ))}
@@ -186,7 +197,7 @@ export function App() {
           <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
           <div className="document-tools">
             <button className="tool-button" aria-label="Markdown으로 내보내기" onClick={() => download(`${document.title}.md`, document.content, "text/markdown")}><Download size={16} /><span>저장</span></button>
-            <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={moveToTrash}><Trash2 size={15} /><span>삭제</span></button>
+            <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={() => moveToTrash()} disabled={liveDocuments.length <= 1}><Trash2 size={15} /><span>삭제</span></button>
             <button className="icon-button desktop-only" aria-label="오른쪽 패널 닫기" onClick={() => setRightOpen((value) => !value)}><PanelRightClose size={17} /></button>
           </div>
         </div>
