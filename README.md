@@ -18,9 +18,7 @@ npm run dev
 기본 프로덕션 빌드는 `apps/web/dist/`에 생성되고 호스팅 호환성을 위해 저장소 루트의 `dist/`에도 복제됩니다.
 Cloudflare의 빌드 명령은 `npm run build`이며 출력 디렉터리는 `apps/web/dist` 또는 `dist`를 사용할 수 있습니다.
 
-`main` 브랜치에 push하면 GitHub Actions도 검사와 빌드를 수행한 후 GitHub Pages에 배포합니다.
-저장소의 **Settings → Pages → Build and deployment → Source**는 `GitHub Actions`로 설정해야 합니다.
-배포 주소는 `https://djfjjd.github.io/osunnote/`입니다.
+`main` 브랜치에 push하면 연결된 Cloudflare Pages가 배포하며, GitHub Actions는 검사와 프로덕션 빌드가 정상인지 검증합니다.
 
 ## 현재 구현
 

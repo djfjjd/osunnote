@@ -3,6 +3,10 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
+.startup-error { min-height:100vh; padding:32px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--paper); }
+.startup-error h1 { margin:18px 0 8px; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:25px; }
+.startup-error p { max-width:420px; margin:0 0 22px; color:var(--muted); line-height:1.65; }
+.startup-error button { height:40px; padding:0 18px; border:0; border-radius:9px; background:var(--green); color:#fff; font-weight:600; }
 .app { height: 100vh; display: grid; grid-template: 56px 1fr / 272px minmax(480px,1fr) 276px; background: var(--paper); }
 .topbar { position:relative; grid-column:1/-1; display:flex; align-items:center; gap:28px; padding:0 18px; border-bottom:1px solid var(--line); background:#f5f2ea; z-index:20; }
 .brand { display:flex; align-items:center; gap:9px; font-family:Inter,sans-serif; font-size:13px; letter-spacing:.16em; font-weight:600; }

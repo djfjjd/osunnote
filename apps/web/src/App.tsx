@@ -21,6 +21,15 @@ const download = (filename: string, body: string, type = "text/plain") => {
   anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
 };
 
+const shouldShowWelcome = (): boolean => {
+  if (new URLSearchParams(window.location.search).has("welcome")) return true;
+  try {
+    return localStorage.getItem("osunnote-welcome-seen") !== "yes";
+  } catch {
+    return true;
+  }
+};
+
 export function App() {
   const [workspace, setWorkspace] = useState<Workspace>(() => initialWorkspace());
   const [ready, setReady] = useState(false);
@@ -33,9 +42,7 @@ export function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [view, setView] = useState<"documents" | "trash">("documents");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(() =>
-    new URLSearchParams(window.location.search).has("welcome") || localStorage.getItem("osunnote-welcome-seen") !== "yes",
-  );
+  const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -162,7 +169,11 @@ export function App() {
   };
 
   const closeWelcome = (focusEditor = false) => {
-    localStorage.setItem("osunnote-welcome-seen", "yes");
+    try {
+      localStorage.setItem("osunnote-welcome-seen", "yes");
+    } catch {
+      // 저장소가 차단된 환경에서도 작업실은 계속 사용할 수 있어야 한다.
+    }
     setShowWelcome(false);
     if (focusEditor) window.setTimeout(() => editorRef.current?.focus(), 0);
   };

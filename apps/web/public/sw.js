@@ -1,4 +1,4 @@
-const CACHE = "osunnote-shell-v2";
+const CACHE = "osunnote-shell-v3";
 self.addEventListener("install", (event) => {
   const appRoot = new URL("./", self.registration.scope).href;
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll([appRoot])).then(() => self.skipWaiting()));
@@ -13,10 +13,18 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(fetch(event.request).then((response) => {
-    const copy = response.clone();
-    caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    if (response.ok) {
+      const copy = response.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    }
     return response;
-  }).catch(() => caches.match(event.request).then((cached) =>
-    cached || caches.match(new URL("./", self.registration.scope).href),
-  )));
+  }).catch(async () => {
+    const cached = await caches.match(event.request);
+    if (cached) return cached;
+    if (event.request.mode === "navigate") {
+      const shell = await caches.match(new URL("./", self.registration.scope).href);
+      if (shell) return shell;
+    }
+    return Response.error();
+  }));
 });

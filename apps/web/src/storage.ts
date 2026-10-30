@@ -4,6 +4,16 @@ const DB_NAME = "osunnote-local";
 const STORE_NAME = "workspace";
 const KEY = "primary";
 
+const isWorkspace = (value: unknown): value is Workspace => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<Workspace>;
+  if (!Array.isArray(candidate.projects) || candidate.projects.length === 0) return false;
+
+  return candidate.projects.some((project) =>
+    project && Array.isArray(project.documents) && project.documents.length > 0,
+  );
+};
+
 const openDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
   const request = indexedDB.open(DB_NAME, 1);
   request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
@@ -16,7 +26,7 @@ export const readWorkspace = async (): Promise<Workspace | undefined> => {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(STORE_NAME, "readonly");
     const request = transaction.objectStore(STORE_NAME).get(KEY);
-    request.onsuccess = () => resolve(request.result as Workspace | undefined);
+    request.onsuccess = () => resolve(isWorkspace(request.result) ? request.result : undefined);
     request.onerror = () => reject(request.error);
   });
 };
