@@ -33,6 +33,7 @@ Cloudflare의 빌드 명령은 `npm run build`이며 출력 디렉터리는 `app
 ## 문서
 
 - [제품 실행계획](docs/PRODUCT_PLAN.md)
+- [Documents·Handwriting 설계안](docs/DOCUMENTS_HANDWRITING_PLAN.md)
 - [Codex 작업 지시문](AGENTS.md)
 
 ## 개발 시작 조건
