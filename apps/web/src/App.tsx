@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Clock3, Download, FilePlus2,
-  Folder, Focus, Hash, HelpCircle, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
+  Folder, Focus, Hash, HelpCircle, House, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
   PanelRightClose, PencilLine, RotateCcw, Search, Settings2, ShieldCheck, Sparkles,
   Trash2, Wifi, WifiOff, X,
 } from "lucide-react";
@@ -13,6 +13,7 @@ import { ko } from "./i18n";
 import { readWorkspace, writeWorkspace } from "./storage";
 import { CalendarPage } from "./CalendarPage";
 import { TopbarCalendar } from "./TopbarCalendar";
+import { HomePage } from "./HomePage";
 
 const statusLabel: Record<DocumentStatus, string> = { idea: "아이디어", draft: "초고", review: "다듬는 중", done: "완료" };
 const statusTone: Record<DocumentStatus, string> = { idea: "blue", draft: "amber", review: "violet", done: "green" };
@@ -43,7 +44,7 @@ export function App() {
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [storageError, setStorageError] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [view, setView] = useState<"documents" | "calendar" | "trash">("documents");
+  const [view, setView] = useState<"home" | "documents" | "calendar" | "trash">("home");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
@@ -244,6 +245,7 @@ export function App() {
         <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
         <button className="new-button" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
         <nav className="navigation" aria-label="문서 탐색">
+          <button className={`nav-item ${view === "home" ? "active" : ""}`} onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
           <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => setView("documents")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />{ko.calendar}</button>
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
@@ -285,7 +287,15 @@ export function App() {
       {!leftOpen && !focus && <button className="edge-open left-open" onClick={() => setLeftOpen(true)} aria-label="왼쪽 패널 열기"><Menu size={18} /></button>}
 
       <main className={`editor-shell ${view !== "documents" ? "wide-view" : ""}`}>
-        {view === "calendar" ? <CalendarPage /> : view === "trash" ? (
+        {view === "home" ? (
+          <HomePage
+            project={project}
+            documents={liveDocuments}
+            onNewDocument={addDocument}
+            onOpenDocument={selectDocument}
+            onOpenCalendar={() => setView("calendar")}
+          />
+        ) : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
           <section className="trash-page">
             <header>
               <div><span className="trash-eyebrow">보관함</span><h1>휴지통</h1><p>삭제한 글은 이 기기에 남아 있으며 언제든 복원할 수 있습니다.</p></div>
