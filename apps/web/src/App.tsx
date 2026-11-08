@@ -39,6 +39,7 @@ export function App() {
   const [rightOpen, setRightOpen] = useState(true);
   const [online, setOnline] = useState(navigator.onLine);
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
+  const [storageError, setStorageError] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [view, setView] = useState<"documents" | "trash">("documents");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
@@ -46,9 +47,14 @@ export function App() {
   const lastSnapshotAt = useRef(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const workspaceRef = useRef(workspace);
+  workspaceRef.current = workspace;
 
   useEffect(() => {
-    readWorkspace().then((stored) => { if (stored) setWorkspace(stored); setReady(true); }).catch(() => setReady(true));
+    readWorkspace()
+      .then((stored) => { if (stored) setWorkspace(stored); })
+      .catch(() => setStorageError(true))
+      .finally(() => setReady(true));
   }, []);
 
   useEffect(() => {
@@ -70,13 +76,24 @@ export function App() {
   });
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || storageError) return;
     setSaveState("saving");
     const timer = window.setTimeout(() => {
       writeWorkspace(workspace).then(() => setSaveState("saved")).catch(() => setSaveState("error"));
     }, 280);
     return () => window.clearTimeout(timer);
-  }, [workspace, ready]);
+  }, [workspace, ready, storageError]);
+
+  useEffect(() => {
+    if (!ready || storageError) return;
+    const saveLatest = () => {
+      if (globalThis.document.visibilityState === "hidden") {
+        void writeWorkspace(workspaceRef.current).catch(() => setSaveState("error"));
+      }
+    };
+    globalThis.document.addEventListener("visibilitychange", saveLatest);
+    return () => globalThis.document.removeEventListener("visibilitychange", saveLatest);
+  }, [ready, storageError]);
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
@@ -179,6 +196,14 @@ export function App() {
   };
 
   if (!ready) return <div className="loading"><span className="brand-mark">O</span><p>작업실을 여는 중…</p></div>;
+  if (storageError) return (
+    <main className="startup-error" role="alert">
+      <span className="brand-mark">O</span>
+      <h1>저장된 글을 안전하게 열지 못했습니다</h1>
+      <p>기존 글을 덮어쓰지 않도록 편집을 중단했습니다. 다른 OSUNNOTE 탭을 닫은 뒤 다시 시도해 주세요.</p>
+      <button type="button" onClick={() => window.location.reload()}>다시 시도</button>
+    </main>
+  );
 
   return (
     <div className={`app ${focus ? "is-focus" : ""}`}>
