@@ -243,9 +243,9 @@ export function App() {
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="sidebar-mobile-head"><div className="brand"><span className="brand-mark">O</span>{ko.appName}</div><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
         <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
-        <button className="new-button" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
+        <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation" aria-label="문서 탐색">
-          <button className={`nav-item ${view === "home" ? "active" : ""}`} onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
+          <button className="nav-item" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
           <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => setView("documents")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />{ko.calendar}</button>
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
