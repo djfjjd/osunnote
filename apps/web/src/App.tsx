@@ -12,6 +12,7 @@ import {
 import { ko } from "./i18n";
 import { readWorkspace, writeWorkspace } from "./storage";
 import { CalendarPage } from "./CalendarPage";
+import { TopbarCalendar } from "./TopbarCalendar";
 
 const statusLabel: Record<DocumentStatus, string> = { idea: "아이디어", draft: "초고", review: "다듬는 중", done: "완료" };
 const statusTone: Record<DocumentStatus, string> = { idea: "blue", draft: "amber", review: "violet", done: "green" };
@@ -223,6 +224,7 @@ export function App() {
             <button onClick={renameProject}><PencilLine size={14} />프로젝트 이름 바꾸기</button>
           </div>
         )}
+        <TopbarCalendar />
         <div className="topbar-actions">
           <div className={`save-state ${saveState}`}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
