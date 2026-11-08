@@ -41,10 +41,11 @@ button { cursor: pointer; }
 .topbar-calendar-day { position:relative; min-height:38px; display:grid; place-items:center; border-radius:8px; font-size:10px; font-weight:700; }
 .topbar-calendar-day.outside { opacity:.3; }
 .topbar-calendar-day.today { background:#405f4b; color:#fff; }
-.topbar-calendar-day>i { position:absolute; left:50%; bottom:4px; width:3px; height:3px; border-radius:50%; background:currentColor; transform:translateX(-50%); }
+.topbar-calendar-day>.event-dot { position:absolute; left:50%; bottom:4px; width:4px; height:4px; border-radius:50%; background:var(--green); transform:translateX(-50%); }
+.topbar-calendar-day.today>.event-dot { background:#fff; }
 .topbar-calendar-popup>footer { display:flex; align-items:center; justify-content:space-between; margin-top:9px; padding-top:9px; border-top:1px solid #e3e0d7; color:#858982; font-size:9px; }
 .topbar-calendar-popup>footer span { display:flex; align-items:center; gap:5px; }
-.holiday-dot { width:5px; height:5px; border-radius:50%; background:#c4473d; }
+.event-dot-legend { width:5px; height:5px; border-radius:50%; background:var(--green); }
 .topbar-calendar-popup>footer button { height:26px; padding:0 9px; border:1px solid #d8d5cc; border-radius:7px; background:#fff; color:#536159; font-size:9px; }
 .topbar-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
 .icon-button,.text-button { border:0; background:transparent; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:8px; height:34px; }

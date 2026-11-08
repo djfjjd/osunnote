@@ -12,12 +12,17 @@ const seoulDate = () => {
   return { year: Number(value("year")), month: Number(value("month")), date: `${value("year")}-${value("month")}-${value("day")}` };
 };
 
-export function TopbarCalendar() {
+interface TopbarCalendarProps {
+  eventDates?: Iterable<string>;
+}
+
+export function TopbarCalendar({ eventDates = [] }: TopbarCalendarProps) {
   const today = seoulDate();
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState({ year: today.year, month: today.month });
   const rootRef = useRef<HTMLDivElement>(null);
   const days = useMemo(() => calendarMonth(visible.year, visible.month), [visible]);
+  const eventDateSet = useMemo(() => new Set(eventDates), [eventDates]);
 
   useEffect(() => {
     if (!open) return;
@@ -67,21 +72,22 @@ export function TopbarCalendar() {
           <div className="topbar-calendar-grid" role="grid" aria-label={`${visible.year}년 ${visible.month}월`}>
             {days.map((day) => {
               const tone = day.holiday || day.dayOfWeek === 0 ? "holiday" : day.dayOfWeek === 6 ? "saturday" : "";
+              const hasEvent = eventDateSet.has(day.date);
               return (
                 <div
                   key={day.date}
                   className={`topbar-calendar-day ${tone} ${day.inCurrentMonth ? "" : "outside"} ${day.date === today.date ? "today" : ""}`}
                   role="gridcell"
                   title={day.holiday?.name}
-                  aria-label={`${day.date}${day.holiday ? ` ${day.holiday.name}` : ""}`}
+                  aria-label={`${day.date}${day.holiday ? ` ${day.holiday.name}` : ""}${hasEvent ? " 일정 있음" : ""}`}
                 >
                   <time dateTime={day.date}>{day.day}</time>
-                  {day.holiday && <i aria-hidden="true" />}
+                  {hasEvent && <i className="event-dot" aria-hidden="true" />}
                 </div>
               );
             })}
           </div>
-          <footer><span><i className="holiday-dot" />공휴일</span><button type="button" onClick={showToday}>오늘로 이동</button></footer>
+          <footer><span><i className="event-dot-legend" />일정 있음</span><button type="button" onClick={showToday}>오늘로 이동</button></footer>
         </section>
       )}
     </div>
