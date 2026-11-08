@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { countCharacters, createDocument, initialWorkspace, saveDocument, searchDocuments } from "./index";
+import {
+  calendarMonth, countCharacters, createDocument, initialWorkspace, koreanHoliday,
+  saveDocument, searchDocuments,
+} from "./index";
 
 describe("writing domain", () => {
   it("counts visible characters without whitespace", () => {
@@ -19,5 +22,21 @@ describe("writing domain", () => {
     const document = { ...createDocument("첫 장"), tags: ["미스터리"], content: "밤의 기차" };
     expect(searchDocuments([document], "미스터리")).toHaveLength(1);
     expect(searchDocuments([document], "낮")).toHaveLength(0);
+  });
+});
+
+describe("Korean calendar", () => {
+  it("marks fixed, lunar and substitute public holidays", () => {
+    expect(koreanHoliday("2026-03-01")?.name).toBe("삼일절");
+    expect(koreanHoliday("2026-09-25")?.name).toBe("추석");
+    expect(koreanHoliday("2026-10-05")?.name).toBe("개천절 대체공휴일");
+    expect(koreanHoliday("2026-11-09")).toBeUndefined();
+  });
+
+  it("builds a six-week month with stable weekday values", () => {
+    const days = calendarMonth(2026, 11);
+    expect(days).toHaveLength(42);
+    expect(days[0]).toMatchObject({ date: "2026-11-01", dayOfWeek: 0, inCurrentMonth: true });
+    expect(days[6]).toMatchObject({ date: "2026-11-07", dayOfWeek: 6, inCurrentMonth: true });
   });
 });

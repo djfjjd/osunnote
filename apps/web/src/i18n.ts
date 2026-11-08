@@ -3,6 +3,7 @@ export const ko = {
   search: "글과 태그 검색",
   newDocument: "새 글",
   allDocuments: "모든 글",
+  calendar: "캘린더",
   trash: "휴지통",
   focus: "집중",
   export: "내보내기",
