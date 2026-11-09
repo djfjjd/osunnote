@@ -32,7 +32,7 @@ button { cursor: pointer; }
 .project-menu-projects button:hover { background:#eeece5; }
 .project-menu-projects button.active { background:#e2e9e1; color:#36523f; }
 .project-menu-projects button strong { min-width:0; flex:1; overflow:hidden; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
-.project-menu-projects button small { flex:none; color:#92978f; font-size:8px; }
+.project-menu-projects button small { flex:none; color:#5f675f; font-size:11px; font-weight:700; }
 .project-add-button { width:100%; height:34px; border:1px solid #d9d6cd; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; gap:6px; font-size:10px; }
 .project-add-button:hover { background:#edf1eb; color:#3f654c; }
 .topbar-calendar { position:absolute; left:50%; top:50%; z-index:42; transform:translate(-50%,-50%); }
@@ -94,7 +94,7 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .project-manager-list>div.active { background:#e8ede6; }
 .project-manager-list>div>button:first-child { min-width:0; height:43px; display:flex; align-items:center; gap:8px; padding:0 7px; text-align:left; }
 .project-manager-list>div>button:first-child span { min-width:0; flex:1; overflow:hidden; color:#3e443e; font-size:10px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
-.project-manager-list>div>button:first-child small { flex:none; color:#969a93; font-size:8px; }
+.project-manager-list>div>button:first-child small { flex:none; color:#5f675f; font-size:11px; font-weight:700; }
 .project-manager-edit { width:28px; height:28px; display:grid; place-items:center; padding:0; border-radius:7px!important; }
 .project-manager-edit:hover { background:#dce4da!important; color:#405f4b; }
 .project-manager-add { width:100%; height:34px; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; border:1px solid #d3d8d1!important; border-radius:8px!important; background:#edf1eb!important; color:#405f4b!important; font-size:9px; font-weight:700; }
