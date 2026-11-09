@@ -204,25 +204,36 @@ export function App() {
     }));
   };
 
-  const renameProject = (projectId = project.id) => {
+  const editProject = (projectId = project.id) => {
     const target = workspace.projects.find((item) => item.id === projectId);
     if (!target) return;
-    const title = window.prompt(ko.project.namePrompt, target.title)?.trim();
-    if (!title || title === target.title) return;
+    const titleInput = window.prompt(ko.project.namePrompt, target.title);
+    if (titleInput === null) return;
+    const title = titleInput.trim();
+    if (!title) return;
+    const descriptionInput = window.prompt(ko.project.descriptionPrompt, target.description);
+    if (descriptionInput === null) return;
+    const description = descriptionInput.trim();
+    if (title === target.title && description === target.description) return;
     setWorkspace((current) => ({
       ...current,
       revision: current.revision + 1,
-      projects: current.projects.map((item) => item.id === projectId ? { ...item, title } : item),
+      projects: current.projects.map((item) => item.id === projectId ? { ...item, title, description } : item),
     }));
     setProjectMenuOpen(false);
   };
 
   const addProject = () => {
-    const title = window.prompt(ko.project.namePrompt)?.trim();
+    const titleInput = window.prompt(ko.project.namePrompt);
+    if (titleInput === null) return;
+    const title = titleInput.trim();
     if (!title) return;
+    const descriptionInput = window.prompt(ko.project.descriptionPrompt);
+    if (descriptionInput === null) return;
+    const description = descriptionInput.trim();
     const created = createDocument();
     const createdProject = {
-      id: crypto.randomUUID(), title, description: ko.project.newDescription,
+      id: crypto.randomUUID(), title, description,
       documents: [created], createdAt: Date.now(),
     };
     setWorkspace((current) => ({
@@ -283,8 +294,8 @@ export function App() {
           {projectMenuOpen && (
             <div className="project-menu">
               <span className="project-menu-label">{ko.project.current}</span>
-              <div className="project-menu-title"><strong>{project.title}</strong><button type="button" onClick={() => renameProject()} aria-label={ko.project.rename} title={ko.project.rename}><PencilLine size={14} /></button></div>
-              <p>{project.description}</p>
+              <div className="project-menu-title"><strong>{project.title}</strong><button type="button" onClick={() => editProject()} aria-label={ko.project.edit} title={ko.project.edit}><PencilLine size={14} /></button></div>
+              <p>{project.description || ko.project.noDescription}</p>
               <div className="project-menu-stats"><span>{liveDocuments.length}개 글</span><span>{liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자</span></div>
               <div className="project-menu-projects">
                 <span>{ko.project.all}</span>
@@ -326,7 +337,7 @@ export function App() {
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
           <button className="nav-item"><Hash size={17} />태그</button>
         </nav>
-        <div className="tree-label"><span>프로젝트</span><div className="project-manager-wrap" ref={projectManagerRef}><button aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>{projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => renameProject(item.id)} aria-label={`${item.title} ${ko.project.rename}`} title={ko.project.rename}><PencilLine size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}</div></div>
+        <div className="tree-label"><span>프로젝트</span><div className="project-manager-wrap" ref={projectManagerRef}><button aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>{projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}</div></div>
         <div className="document-tree">
           {folders.map((folder) => (
             <section key={folder}>

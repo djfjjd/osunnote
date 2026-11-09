@@ -6,10 +6,11 @@ export const ko = {
     current: "현재 프로젝트",
     all: "모든 프로젝트",
     manage: "프로젝트 관리",
-    rename: "프로젝트 이름 바꾸기",
+    edit: "프로젝트 정보 수정",
     add: "새 프로젝트 추가",
     namePrompt: "프로젝트 이름",
-    newDescription: "새로운 글쓰기 프로젝트",
+    descriptionPrompt: "프로젝트 설명",
+    noDescription: "설명 없음",
   },
   allDocuments: "모든 글",
   documentList: {
