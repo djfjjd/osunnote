@@ -291,14 +291,32 @@ export function App() {
   const selectProject = (projectId: string) => {
     const selected = workspace.projects.find((item) => item.id === projectId);
     const firstDocument = selected?.documents.find((item) => !item.deletedAt) ?? selected?.documents[0];
-    if (!selected || !firstDocument) return;
+    if (!selected) return;
     setWorkspace((current) => ({
-      ...current, activeProjectId: selected.id, activeDocumentId: firstDocument.id,
+      ...current, activeProjectId: selected.id, activeDocumentId: firstDocument?.id ?? "",
     }));
     setView("library");
     setProjectMenuOpen(false);
     setProjectManagerOpen(false);
     setMobileMenu(false);
+  };
+
+  const deleteProject = (projectId: string) => {
+    if (workspace.projects.length <= 1) return;
+    const target = workspace.projects.find((item) => item.id === projectId);
+    const replacement = workspace.projects.find((item) => item.id !== projectId);
+    if (!target || !replacement || !window.confirm(`‘${target.title}’ 프로젝트와 포함된 글을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.`)) return;
+    const replacementDocument = replacement.documents.find((item) => !item.deletedAt) ?? replacement.documents[0];
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      activeProjectId: current.activeProjectId === projectId ? replacement.id : current.activeProjectId,
+      activeDocumentId: current.activeProjectId === projectId ? replacementDocument?.id ?? "" : current.activeDocumentId,
+      projects: current.projects.filter((item) => item.id !== projectId),
+    }));
+    if (projectId === workspace.activeProjectId) setView("home");
+    setProjectMenuOpen(false);
+    setProjectManagerOpen(false);
   };
 
   const closeWelcome = (focusEditor = false) => {
@@ -340,9 +358,12 @@ export function App() {
                 <span>{ko.project.all}</span>
                 <div>
                   {workspace.projects.map((item) => (
-                    <button type="button" className={item.id === project.id ? "active" : ""} key={item.id} onClick={() => selectProject(item.id)}>
-                      <strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small>
-                    </button>
+                    <div className={`project-menu-project-row ${item.id === project.id ? "active" : ""}`} key={item.id}>
+                      <button type="button" className="project-menu-project-switch" onClick={() => selectProject(item.id)}>
+                        <strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small>
+                      </button>
+                      <button type="button" className="project-delete-button" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={14} /></button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -376,7 +397,7 @@ export function App() {
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
           <button className="nav-item"><Hash size={17} />태그</button>
         </nav>
-        <div className="tree-label"><span>프로젝트</span><div className="project-manager-wrap" ref={projectManagerRef}><button aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>{projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}</div></div>
+        <div className="tree-label"><span>프로젝트</span><div className="project-manager-wrap" ref={projectManagerRef}><button aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>{projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button><button type="button" className="project-manager-delete" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}</div></div>
         <div className="document-tree">
           {folders.map((folder) => (
             <section key={folder}>
