@@ -24,7 +24,7 @@ export function CalendarPage() {
   return (
     <section className="calendar-page" aria-label="캘린더">
       <header className="calendar-page-header">
-        <div><span>일정</span><h1>{visible.year}년 {visible.month}월</h1></div>
+        <div><h1>{visible.year}년 {visible.month}월</h1></div>
         <div className="calendar-page-controls">
           <button type="button" onClick={() => moveMonth(-1)} aria-label="이전 달"><ChevronLeft /></button>
           <button type="button" onClick={() => setVisible(currentMonth())}>오늘</button>

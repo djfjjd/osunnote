@@ -386,7 +386,7 @@ export function App() {
         ) : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
           <section className="trash-page">
             <header>
-              <div><span className="trash-eyebrow">보관함</span><h1>휴지통</h1><p>삭제한 글은 이 기기에 남아 있으며 언제든 복원할 수 있습니다.</p></div>
+              <div><h1>휴지통</h1></div>
               <button className="empty-trash-button" onClick={emptyTrash} disabled={deletedDocuments.length === 0}><Trash2 size={16} />휴지통 비우기</button>
             </header>
             {deletedDocuments.length === 0 ? (

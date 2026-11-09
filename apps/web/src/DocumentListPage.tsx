@@ -23,7 +23,7 @@ export function DocumentListPage({ documents, onOpenDocument, onNewDocument }: D
   return (
     <section className="document-list-page">
       <header>
-        <div><span>{ko.documentList.eyebrow}</span><h1>{ko.allDocuments}</h1><p>{ko.documentList.description}</p></div>
+        <div><h1>{ko.documentList.title}</h1></div>
         <button type="button" onClick={onNewDocument}><FilePlus2 />{ko.newDocument}</button>
       </header>
       <div className="document-list">
