@@ -189,7 +189,12 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .document-list-preview { color:#777c75; font-size:10px; }
 .document-list>button small,.document-list>button time { color:#7f857d; font-size:11px; white-space:nowrap; }
 .document-list>button time { text-align:right; font-variant-numeric:tabular-nums; }
-.document-list-empty { padding:50px 8px; color:#969a93; text-align:center; font-size:11px; }
+.document-list-empty-state { min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.document-list-empty-state>span { width:58px; height:58px; display:grid; place-items:center; border-radius:50%; background:var(--green-soft); color:var(--green); }
+.document-list-empty-state h2 { margin:18px 0 7px; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:22px; }
+.document-list-empty-state p { margin:0 0 20px; color:var(--muted); font-size:12px; }
+.document-list-empty-state button { height:40px; display:flex; align-items:center; gap:7px; padding:0 16px; border:0; border-radius:9px; background:var(--green); color:#fff; font-size:12px; font-weight:700; }
+.document-list-empty-state button:hover { background:#34513f; }
 .document-header { height:50px; border-bottom:1px solid #ece9e1; display:flex; align-items:center; padding:0 22px; flex:none; }
 .breadcrumb { min-width:0; flex:1; display:flex; align-items:center; gap:8px; color:#7f857e; font-size:13px; }
 .breadcrumb>span { flex:none; }

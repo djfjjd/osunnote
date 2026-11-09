@@ -1,4 +1,4 @@
-import { FilePlus2, FileText } from "lucide-react";
+import { FilePlus2, FileText, PencilLine } from "lucide-react";
 import { countCharacters, type WritingDocument } from "@osunnote/domain";
 import { ko } from "./i18n";
 
@@ -36,7 +36,14 @@ export function DocumentListPage({ documents, onOpenDocument, onNewDocument }: D
             <time dateTime={new Date(document.createdAt).toISOString()}>{ko.documentList.created} {createdDate(document.createdAt)}</time>
           </button>
         ))}
-        {sorted.length === 0 && <p className="document-list-empty">{ko.home.noDocuments}</p>}
+        {sorted.length === 0 && (
+          <div className="document-list-empty-state">
+            <span><PencilLine size={25} /></span>
+            <h2>아직 작성한 글이 없습니다</h2>
+            <p>새 글을 만들고 이야기를 시작해 보세요.</p>
+            <button type="button" onClick={onNewDocument}><FilePlus2 size={17} />+ 새 글 작성하기</button>
+          </div>
+        )}
       </div>
     </section>
   );
