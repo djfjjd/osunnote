@@ -345,7 +345,7 @@ export function App() {
     setProjectManagerOpen(false);
   };
 
-  const addFolder = (parent = "") => {
+  const addFolder = (parent = "", projectId = project.id) => {
     const input = window.prompt(parent ? `‘${parent}’ 안에 만들 하위 폴더 이름` : "새 폴더 이름");
     if (input === null) return;
     const childPath = input.split("/").map((part) => part.trim()).filter(Boolean).join("/");
@@ -354,11 +354,52 @@ export function App() {
     setWorkspace((current) => ({
       ...current,
       revision: current.revision + 1,
-      projects: current.projects.map((item) => item.id === project.id
+      projects: current.projects.map((item) => item.id === projectId
         ? { ...item, folders: folderHierarchy([...(item.folders ?? []), path]) }
         : item),
     }));
-    setSelectedFolder(path);
+    if (projectId === project.id) setSelectedFolder(path);
+  };
+
+  const renameFolder = (projectId: string, folder: string) => {
+    const parent = folder.split("/").slice(0, -1).join("/");
+    const currentName = folder.split("/").at(-1) ?? folder;
+    const input = window.prompt("폴더 이름 변경", currentName);
+    if (input === null) return;
+    const name = input.trim().replaceAll("/", "");
+    if (!name || name === currentName) return;
+    const nextPath = parent ? `${parent}/${name}` : name;
+    const replacePath = (path: string) => path === folder || path.startsWith(`${folder}/`) ? `${nextPath}${path.slice(folder.length)}` : path;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === projectId ? {
+        ...item,
+        folders: folderHierarchy(item.folders.map(replacePath)),
+        documents: item.documents.map((entry) => ({ ...entry, folder: replacePath(entry.folder) })),
+      } : item),
+    }));
+    if (projectId === project.id && (selectedFolder === folder || selectedFolder.startsWith(`${folder}/`))) setSelectedFolder(replacePath(selectedFolder));
+  };
+
+  const deleteFolder = (projectId: string, folder: string) => {
+    const target = workspace.projects.find((item) => item.id === projectId);
+    if (!target) return;
+    const affected = target.documents.filter((entry) => entry.folder === folder || entry.folder.startsWith(`${folder}/`)).length;
+    const message = affected > 0
+      ? `‘${folder}’ 폴더를 삭제할까요? 포함된 글 ${affected}개는 ‘원고’ 폴더로 이동합니다.`
+      : `‘${folder}’ 폴더를 삭제할까요?`;
+    if (!window.confirm(message)) return;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === projectId ? {
+        ...item,
+        folders: folderHierarchy(["원고", ...item.folders.filter((path) => path !== folder && !path.startsWith(`${folder}/`))]),
+        documents: item.documents.map((entry) => entry.folder === folder || entry.folder.startsWith(`${folder}/`) ? { ...entry, folder: "원고" } : entry),
+      } : item),
+    }));
+    if (projectId === project.id && (selectedFolder === folder || selectedFolder.startsWith(`${folder}/`))) setSelectedFolder("원고");
   };
 
   const closeWelcome = (focusEditor = false) => {
@@ -444,7 +485,34 @@ export function App() {
           <div className="project-manager-wrap" ref={projectManagerRef}>
             <button type="button" aria-label="최상위 폴더 추가" title="폴더 추가" onClick={() => addFolder()}><FolderPlus size={15} /></button>
             <button type="button" aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>
-            {projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button><button type="button" className="project-manager-delete" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}
+            {projectManagerOpen && (
+              <div className="project-manager-menu">
+                <strong>{ko.project.manage}</strong>
+                <div className="project-manager-list">
+                  {workspace.projects.map((item) => (
+                    <section className={`project-manager-project ${item.id === project.id ? "active" : ""}`} key={item.id}>
+                      <div className="project-manager-project-row">
+                        <button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button>
+                        <button type="button" className="project-manager-folder-add" onClick={() => addFolder("", item.id)} aria-label={`${item.title} 폴더 추가`} title="폴더 추가"><FolderPlus size={13} /></button>
+                        <button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button>
+                        <button type="button" className="project-manager-delete" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={13} /></button>
+                      </div>
+                      <div className="project-manager-folders">
+                        {folderHierarchy([...(item.folders ?? []), ...item.documents.map((entry) => entry.folder)]).map((folder) => (
+                          <div key={folder} style={{ paddingLeft: `${8 + (folder.split("/").length - 1) * 13}px` }}>
+                            <Folder size={13} /><span>{folder.split("/").at(-1)}</span><small>{item.documents.filter((entry) => entry.folder === folder && !entry.deletedAt).length}</small>
+                            <button type="button" onClick={() => addFolder(folder, item.id)} aria-label={`${folder} 하위 폴더 추가`} title="하위 폴더 추가"><FolderPlus size={12} /></button>
+                            <button type="button" onClick={() => renameFolder(item.id, folder)} aria-label={`${folder} 이름 변경`} title="폴더 이름 변경"><PencilLine size={12} /></button>
+                            <button type="button" onClick={() => deleteFolder(item.id, folder)} aria-label={`${folder} 삭제`} title="폴더 삭제"><Trash2 size={12} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+                <button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button>
+              </div>
+            )}
           </div>
         </div>
         <div className="document-tree">
