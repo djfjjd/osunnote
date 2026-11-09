@@ -77,6 +77,10 @@ export function App() {
         event.preventDefault();
         addDocument();
       }
+      if (event.key.toLocaleLowerCase() === "s") {
+        event.preventDefault();
+        void completeAndSaveDocument();
+      }
     };
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
@@ -149,6 +153,20 @@ export function App() {
   const updateDocument = (patch: Partial<WritingDocument>, snapshot = false) => {
     setWorkspace((current) => saveDocument(current, document.id, patch, snapshot));
   };
+
+  async function completeAndSaveDocument() {
+    const current = workspaceRef.current;
+    const next = saveDocument(current, current.activeDocumentId, { status: "done" }, true);
+    workspaceRef.current = next;
+    setWorkspace(next);
+    setSaveState("saving");
+    try {
+      await writeWorkspace(next);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }
 
   const updateBody = (content: string) => {
     const shouldSnapshot = Date.now() - lastSnapshotAt.current > 30_000;
@@ -409,7 +427,7 @@ export function App() {
         <div className="document-header">
           <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
           <div className="document-tools">
-            <button className="tool-button" aria-label="Markdown으로 내보내기" onClick={() => download(`${document.title}.md`, document.content, "text/markdown")}><Download size={16} /><span>저장</span></button>
+            <button className="tool-button" aria-label="글 저장 및 완료" onClick={() => void completeAndSaveDocument()}><Check size={16} /><span>저장</span></button>
             <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={() => moveToTrash()} disabled={liveDocuments.length <= 1}><Trash2 size={15} /><span>삭제</span></button>
             <button className="icon-button desktop-only" aria-label="오른쪽 패널 닫기" onClick={() => setRightOpen((value) => !value)}><PanelRightClose size={17} /></button>
           </div>
@@ -448,7 +466,7 @@ export function App() {
         </section>
         <section className="inspector-section export-card">
           <Sparkles size={19} /><div><strong>내 글은 내 것으로</strong><p>언제든 표준 형식으로 보관하세요.</p></div>
-          <button onClick={() => download(`${document.title}.txt`, document.content)}>{ko.export}</button>
+          <button onClick={() => download(`${document.title}.txt`, document.content)}><Download size={15} />{ko.export}</button>
         </section>
       </aside>
       {!rightOpen && !focus && view === "documents" && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
