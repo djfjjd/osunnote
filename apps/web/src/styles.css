@@ -11,17 +11,22 @@ button { cursor: pointer; }
 .topbar { position:relative; grid-column:1/-1; display:flex; align-items:center; gap:28px; padding:0 18px; border-bottom:1px solid var(--line); background:#f5f2ea; z-index:20; }
 .brand { display:flex; align-items:center; gap:9px; font-family:Inter,sans-serif; font-size:13px; letter-spacing:.16em; font-weight:600; }
 .brand-mark { width:28px; height:28px; display:grid; place-items:center; border:1px solid #859184; border-radius:50%; color:var(--green); font-family:Georgia,serif; font-weight:700; font-size:16px; }
-.project-switcher { border:0; background:transparent; display:flex; gap:8px; align-items:center; font-size:13px; font-weight:600; padding:8px; border-radius:8px; }
+.project-switcher-wrap { position:relative; }
+.project-switcher { max-width:260px; border:0; background:transparent; display:flex; gap:8px; align-items:center; font-size:13px; font-weight:600; padding:8px; border-radius:8px; }
+.project-switcher span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .project-switcher:hover,.project-switcher.open { background:#e8e5dc; }
 .project-switcher svg { transition:transform .2s; }
 .project-switcher.open svg { transform:rotate(180deg); }
-.project-menu { position:absolute; z-index:30; top:48px; left:145px; width:270px; padding:16px; border:1px solid #dad7ce; border-radius:12px; background:#fbfaf6; box-shadow:0 14px 35px #30363024; }
+.project-menu { position:absolute; z-index:30; top:42px; left:0; width:270px; padding:16px; border:1px solid #dad7ce; border-radius:12px; background:#fbfaf6; box-shadow:0 14px 35px #30363024; }
 .project-menu-label { color:#969991; font-size:9px; letter-spacing:.07em; text-transform:uppercase; }
-.project-menu strong { display:block; margin-top:7px; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:17px; }
+.project-menu-title { display:flex; align-items:center; gap:8px; margin-top:7px; }
+.project-menu-title strong { min-width:0; flex:1; overflow:hidden; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:17px; text-overflow:ellipsis; white-space:nowrap; }
+.project-menu-title>button { width:28px!important; height:28px!important; flex:none; padding:0!important; border:0!important; border-radius:7px!important; background:transparent!important; color:#737a73; }
+.project-menu-title>button:hover { background:#e9ece6!important; color:#3f654c; }
 .project-menu p { margin:5px 0 13px; color:#80837d; font-size:10px; line-height:1.5; }
-.project-menu>div { display:flex; gap:12px; padding:9px 0 12px; border-top:1px solid #e5e2d9; color:#777b74; font-size:10px; }
-.project-menu button { width:100%; height:34px; border:1px solid #d9d6cd; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; gap:6px; font-size:10px; }
-.project-menu button:hover { background:#edf1eb; color:#3f654c; }
+.project-menu-stats { display:flex; gap:12px; padding:9px 0 12px; border-top:1px solid #e5e2d9; color:#777b74; font-size:10px; }
+.project-add-button { width:100%; height:34px; border:1px solid #d9d6cd; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; gap:6px; font-size:10px; }
+.project-add-button:hover { background:#edf1eb; color:#3f654c; }
 .topbar-calendar { position:absolute; left:50%; top:50%; z-index:42; transform:translate(-50%,-50%); }
 .topbar-date-button { height:34px; display:flex; align-items:center; gap:7px; padding:0 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:#596059; font:600 12px/1 Inter,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
 .topbar-date-button:hover,.topbar-date-button.open { border-color:#d8d5cc; background:#ebe8df; color:#314638; }
@@ -71,6 +76,20 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .nav-item span { margin-left:auto; font-size:10px; color:#92958f; }
 .tree-label { display:flex; align-items:center; justify-content:space-between; padding:17px 8px 8px; color:#92958f; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
 .tree-label button { border:0; background:transparent; color:inherit; }
+.project-manager-wrap { position:relative; }
+.project-manager-wrap>button { width:28px; height:28px; display:grid; place-items:center; padding:0; border-radius:7px; }
+.project-manager-wrap>button:hover { background:#e5e2da; color:#4d6354; }
+.project-manager-menu { position:absolute; z-index:25; top:31px; right:0; width:250px; padding:13px; border:1px solid #d8d5cc; border-radius:11px; background:#fbfaf6; box-shadow:0 14px 34px rgba(36,42,36,.18); text-transform:none; letter-spacing:0; }
+.project-manager-menu>strong { display:block; padding:2px 4px 9px; color:#60665f; font-size:10px; }
+.project-manager-list { max-height:230px; overflow:auto; border-top:1px solid #e3e0d7; }
+.project-manager-list>div { display:grid; grid-template-columns:minmax(0,1fr) 30px; align-items:center; border-bottom:1px solid #e8e5dd; }
+.project-manager-list>div.active { background:#e8ede6; }
+.project-manager-list>div>button:first-child { min-width:0; height:43px; display:flex; align-items:center; gap:8px; padding:0 7px; text-align:left; }
+.project-manager-list>div>button:first-child span { min-width:0; flex:1; overflow:hidden; color:#3e443e; font-size:10px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.project-manager-list>div>button:first-child small { flex:none; color:#969a93; font-size:8px; }
+.project-manager-edit { width:28px; height:28px; display:grid; place-items:center; padding:0; border-radius:7px!important; }
+.project-manager-edit:hover { background:#dce4da!important; color:#405f4b; }
+.project-manager-add { width:100%; height:34px; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; border:1px solid #d3d8d1!important; border-radius:8px!important; background:#edf1eb!important; color:#405f4b!important; font-size:9px; font-weight:700; }
 .document-tree { flex:1; min-height:0; overflow:auto; }
 .folder-row { height:32px; display:flex; align-items:center; gap:7px; padding:0 8px; font-size:11px; font-weight:600; }
 .folder-row span:last-child { margin-left:auto; color:#9a9d96; font-weight:400; }
