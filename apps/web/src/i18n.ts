@@ -4,6 +4,7 @@ export const ko = {
   newDocument: "새 글",
   project: {
     current: "현재 프로젝트",
+    all: "모든 프로젝트",
     manage: "프로젝트 관리",
     rename: "프로젝트 이름 바꾸기",
     add: "새 프로젝트 추가",

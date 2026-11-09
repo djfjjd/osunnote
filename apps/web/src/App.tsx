@@ -286,6 +286,16 @@ export function App() {
               <div className="project-menu-title"><strong>{project.title}</strong><button type="button" onClick={() => renameProject()} aria-label={ko.project.rename} title={ko.project.rename}><PencilLine size={14} /></button></div>
               <p>{project.description}</p>
               <div className="project-menu-stats"><span>{liveDocuments.length}개 글</span><span>{liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자</span></div>
+              <div className="project-menu-projects">
+                <span>{ko.project.all}</span>
+                <div>
+                  {workspace.projects.map((item) => (
+                    <button type="button" className={item.id === project.id ? "active" : ""} key={item.id} onClick={() => selectProject(item.id)}>
+                      <strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button className="project-add-button" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button>
             </div>
           )}

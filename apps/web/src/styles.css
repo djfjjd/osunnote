@@ -17,7 +17,7 @@ button { cursor: pointer; }
 .project-switcher:hover,.project-switcher.open { background:#e8e5dc; }
 .project-switcher svg { transition:transform .2s; }
 .project-switcher.open svg { transform:rotate(180deg); }
-.project-menu { position:absolute; z-index:30; top:42px; left:0; width:270px; padding:16px; border:1px solid #dad7ce; border-radius:12px; background:#fbfaf6; box-shadow:0 14px 35px #30363024; }
+.project-menu { position:absolute; z-index:30; top:42px; left:0; width:290px; padding:16px; border:1px solid #dad7ce; border-radius:12px; background:#fbfaf6; box-shadow:0 14px 35px #30363024; }
 .project-menu-label { color:#969991; font-size:9px; letter-spacing:.07em; text-transform:uppercase; }
 .project-menu-title { display:flex; align-items:center; gap:8px; margin-top:7px; }
 .project-menu-title strong { min-width:0; flex:1; overflow:hidden; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:17px; text-overflow:ellipsis; white-space:nowrap; }
@@ -25,6 +25,14 @@ button { cursor: pointer; }
 .project-menu-title>button:hover { background:#e9ece6!important; color:#3f654c; }
 .project-menu p { margin:5px 0 13px; color:#80837d; font-size:10px; line-height:1.5; }
 .project-menu-stats { display:flex; gap:12px; padding:9px 0 12px; border-top:1px solid #e5e2d9; color:#777b74; font-size:10px; }
+.project-menu-projects { padding:11px 0; border-top:1px solid #e5e2d9; }
+.project-menu-projects>span { display:block; padding:0 4px 7px; color:#969991; font-size:9px; font-weight:700; letter-spacing:.06em; }
+.project-menu-projects>div { max-height:180px; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+.project-menu-projects button { width:100%; height:38px; display:flex; align-items:center; gap:10px; padding:0 8px; border:0; border-radius:7px; background:transparent; text-align:left; }
+.project-menu-projects button:hover { background:#eeece5; }
+.project-menu-projects button.active { background:#e2e9e1; color:#36523f; }
+.project-menu-projects button strong { min-width:0; flex:1; overflow:hidden; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.project-menu-projects button small { flex:none; color:#92978f; font-size:8px; }
 .project-add-button { width:100%; height:34px; border:1px solid #d9d6cd; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; gap:6px; font-size:10px; }
 .project-add-button:hover { background:#edf1eb; color:#3f654c; }
 .topbar-calendar { position:absolute; left:50%; top:50%; z-index:42; transform:translate(-50%,-50%); }
