@@ -60,6 +60,8 @@ export function App() {
   const [editingProjectId, setEditingProjectId] = useState<string>();
   const [projectTitleDraft, setProjectTitleDraft] = useState("");
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState("");
+  const [selectedFolder, setSelectedFolder] = useState("원고");
+  const [dragOverFolder, setDragOverFolder] = useState<string>();
   const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -166,10 +168,13 @@ export function App() {
   const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
   const folders = folderHierarchy([...(project.folders ?? []), ...filtered.map((item) => item.folder)]);
+  const selectedFolderPath = folders.includes(selectedFolder) ? selectedFolder : document?.folder ?? folders[0] ?? "원고";
   const characters = countCharacters(document?.content ?? "");
   const progress = document ? Math.min(100, Math.round((characters / Math.max(document.goal, 1)) * 100)) : 0;
 
   const selectDocument = (id: string) => {
+    const selected = liveDocuments.find((item) => item.id === id);
+    if (selected) setSelectedFolder(selected.folder);
     setWorkspace((current) => ({ ...current, activeDocumentId: id }));
     setView("documents");
     setMobileMenu(false);
@@ -205,7 +210,7 @@ export function App() {
   };
 
   const addDocument = () => {
-    const created = createDocument("제목 없는 글", "원고");
+    const created = createDocument("제목 없는 글", selectedFolderPath);
     setWorkspace((current) => ({
       ...current, revision: current.revision + 1, activeDocumentId: created.id,
       projects: current.projects.map((item) => item.id === project.id ? { ...item, documents: [...item.documents, created] } : item),
@@ -227,6 +232,12 @@ export function App() {
 
   const restoreDocument = (documentId: string) => {
     setWorkspace((current) => saveDocument(current, documentId, { deletedAt: undefined } as Partial<WritingDocument>));
+  };
+
+  const moveDocumentToFolder = (documentId: string, folder: string) => {
+    setWorkspace((current) => saveDocument(current, documentId, { folder }));
+    setSelectedFolder(folder);
+    setDragOverFolder(undefined);
   };
 
   const deleteForever = (documentId: string) => {
@@ -309,6 +320,7 @@ export function App() {
     setWorkspace((current) => ({
       ...current, activeProjectId: selected.id, activeDocumentId: firstDocument?.id ?? "",
     }));
+    setSelectedFolder(firstDocument?.folder ?? selected.folders[0] ?? "원고");
     setView("library");
     setProjectMenuOpen(false);
     setProjectManagerOpen(false);
@@ -346,6 +358,7 @@ export function App() {
         ? { ...item, folders: folderHierarchy([...(item.folders ?? []), path]) }
         : item),
     }));
+    setSelectedFolder(path);
   };
 
   const closeWelcome = (focusEditor = false) => {
@@ -437,12 +450,26 @@ export function App() {
         <div className="document-tree">
           {folders.map((folder) => (
             <section key={folder}>
-              <div className="folder-row" style={{ paddingLeft: `${8 + (folder.split("/").length - 1) * 16}px` }}>
-                <Folder size={16} /><span>{folder.split("/").at(-1)}</span><span>{filtered.filter((item) => item.folder === folder).length}</span>
+              <div
+                className={`folder-row ${selectedFolderPath === folder ? "selected" : ""} ${dragOverFolder === folder ? "drag-over" : ""}`}
+                style={{ paddingLeft: `${8 + (folder.split("/").length - 1) * 16}px` }}
+                onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverFolder(folder); }}
+                onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragOverFolder(undefined); }}
+                onDrop={(event) => { event.preventDefault(); const documentId = event.dataTransfer.getData("application/x-osunnote-document") || event.dataTransfer.getData("text/plain"); if (documentId) moveDocumentToFolder(documentId, folder); }}
+              >
+                <button type="button" className="folder-select" onClick={() => setSelectedFolder(folder)} aria-pressed={selectedFolderPath === folder}>
+                  <Folder size={16} /><span>{folder.split("/").at(-1)}</span><span>{filtered.filter((item) => item.folder === folder).length}</span>
+                </button>
                 <button type="button" onClick={() => addFolder(folder)} aria-label={`${folder}에 하위 폴더 추가`} title="하위 폴더 추가"><FolderPlus size={13} /></button>
               </div>
               {filtered.filter((item) => item.folder === folder).map((item) => (
-                <div key={item.id} className={`document-row ${item.id === document?.id ? "selected" : ""}`}>
+                <div
+                  key={item.id}
+                  className={`document-row ${item.id === document?.id ? "selected" : ""}`}
+                  draggable
+                  onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("application/x-osunnote-document", item.id); event.dataTransfer.setData("text/plain", item.id); }}
+                  onDragEnd={() => setDragOverFolder(undefined)}
+                >
                   <button className="document-select" onClick={() => selectDocument(item.id)} aria-label={`${item.title} 열기`}>
                     <span className={`status-dot ${statusTone[item.status]}`} />
                     <span className="document-copy"><strong>{item.title}</strong><small>{countCharacters(item.content).toLocaleString()}자 · {statusLabel[item.status]}</small></span>
@@ -539,6 +566,10 @@ export function App() {
           <p><strong>{characters.toLocaleString()}</strong> / <input type="number" min="1" value={document.goal} onChange={(event) => updateDocument({ goal: Number(event.target.value) })} aria-label="목표 글자 수" />자</p>
         </section>
         <section className="inspector-section">
+          <label>폴더</label>
+          <select value={document.folder} onChange={(event) => { updateDocument({ folder: event.target.value }); setSelectedFolder(event.target.value); }}>
+            {folders.map((folder) => <option key={folder} value={folder}>{folder}</option>)}
+          </select>
           <label>상태</label>
           <select value={document.status} onChange={(event) => updateDocument({ status: event.target.value as DocumentStatus })}>
             {Object.entries(statusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}

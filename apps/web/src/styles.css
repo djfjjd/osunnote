@@ -109,11 +109,17 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .document-tree::-webkit-scrollbar { width:7px; }
 .document-tree::-webkit-scrollbar-thumb { border:2px solid transparent; border-radius:10px; background:#c5c8c0; background-clip:padding-box; }
 .folder-row { height:32px; display:flex; align-items:center; gap:7px; padding:0 8px; font-size:11px; font-weight:600; }
-.folder-row>span:nth-of-type(2) { margin-left:auto; color:#9a9d96; font-weight:400; }
-.folder-row>button { width:25px; height:25px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:6px; background:transparent; color:#8b918a; opacity:.55; }
-.folder-row:hover>button,.folder-row>button:focus-visible { opacity:1; }
-.folder-row>button:hover { background:#e2e6df; color:#466b56; }
+.folder-row.selected { background:#e6ebe4; color:#36523f; }
+.folder-row.drag-over { background:#d7e6d8; box-shadow:inset 0 0 0 1px #739078; }
+.folder-select { min-width:0; height:100%; flex:1; display:flex; align-items:center; gap:7px; padding:0; border:0; background:transparent; color:inherit; text-align:left; }
+.folder-select>span:first-of-type { min-width:0; overflow:hidden; flex:1; text-overflow:ellipsis; white-space:nowrap; }
+.folder-select>span:last-of-type { flex:none; color:#8b918a; font-weight:500; }
+.folder-row>button:last-child { width:25px; height:25px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:6px; background:transparent; color:#8b918a; opacity:.55; }
+.folder-row:hover>button:last-child,.folder-row>button:last-child:focus-visible { opacity:1; }
+.folder-row>button:last-child:hover { background:#d9e1d7; color:#466b56; }
 .document-row { width:100%; min-height:47px; background:transparent; display:flex; align-items:center; padding:2px 5px 2px 14px; border-radius:8px; }
+.document-row[draggable="true"] { cursor:grab; }
+.document-row[draggable="true"]:active { cursor:grabbing; }
 .document-row:hover { background:#ece9e1; }
 .document-row.selected { background:#dde5dc; box-shadow:inset 2px 0 #496c55; }
 .document-select { min-width:0; flex:1; align-self:stretch; border:0; background:transparent; display:flex; align-items:flex-start; gap:9px; padding:8px 4px 7px 6px; text-align:left; }
