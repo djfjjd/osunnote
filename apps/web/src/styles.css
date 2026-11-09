@@ -191,14 +191,14 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .document-list>button time { text-align:right; font-variant-numeric:tabular-nums; }
 .document-list-empty { padding:50px 8px; color:#969a93; text-align:center; font-size:11px; }
 .document-header { height:50px; border-bottom:1px solid #ece9e1; display:flex; align-items:center; padding:0 22px; flex:none; }
-.breadcrumb { min-width:0; flex:1; display:flex; align-items:center; gap:8px; color:#93968f; font-size:10px; }
+.breadcrumb { min-width:0; flex:1; display:flex; align-items:center; gap:8px; color:#7f857e; font-size:13px; }
 .breadcrumb>span { flex:none; }
-.breadcrumb-title { min-width:90px; width:min(220px,28vw); height:30px; padding:0 6px; overflow:hidden; border:1px solid transparent; border-radius:6px; outline:0; background:transparent; color:#424842; font-size:11px; font-weight:700; text-overflow:ellipsis; }
+.breadcrumb-title { min-width:90px; width:min(220px,28vw); height:32px; padding:0 6px; overflow:hidden; border:1px solid transparent; border-radius:6px; outline:0; background:transparent; color:#424842; font-size:14px; font-weight:700; text-overflow:ellipsis; }
 .breadcrumb-title:hover { border-color:#ddd9d0; background:#f8f6f0; }
 .breadcrumb-title:focus { border-color:#718c78; background:#fff; box-shadow:0 0 0 2px #dfe8df; }
-.document-header-meta { flex:none; display:flex; align-items:center; gap:8px; margin-left:auto; color:#858b84; font-size:10px; white-space:nowrap; }
+.document-header-meta { flex:none; display:flex; align-items:center; gap:8px; margin-left:auto; color:#747b74; font-size:12px; white-space:nowrap; }
 .document-tools { flex:none; margin-left:10px; display:flex; gap:2px; }
-.tool-button { height:32px; border:0; background:transparent; border-radius:8px; display:inline-flex; align-items:center; gap:5px; padding:0 9px; font-size:10px; color:#676b65; }
+.tool-button { height:34px; border:0; background:transparent; border-radius:8px; display:inline-flex; align-items:center; gap:5px; padding:0 9px; font-size:12px; font-weight:600; color:#5b615b; }
 .tool-button:hover { background:#e9e7df; color:#354b3b; }
 .tool-button:disabled { cursor:not-allowed; opacity:.35; background:transparent; }
 .danger:hover { color:#a8463d; background:#f4e5e2; }
