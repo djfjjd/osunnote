@@ -298,6 +298,23 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .welcome-primary:hover { background:#34513f; }
 .welcome-primary span { font-size:16px; }
 .welcome-dialog > small { display:block; margin-top:13px; color:#999c96; text-align:center; font-size:9px; }
+.project-edit-backdrop { position:fixed; z-index:110; inset:0; display:grid; place-items:center; padding:20px; background:rgba(34,39,34,.38); backdrop-filter:blur(4px); }
+.project-edit-dialog { width:min(440px,100%); padding:24px; border:1px solid #dfdcd3; border-radius:16px; background:#fbfaf6; box-shadow:0 22px 60px rgba(32,38,32,.22); }
+.project-edit-dialog>header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:22px; }
+.project-edit-dialog>header span { color:#7c847c; font-size:10px; font-weight:700; letter-spacing:.08em; }
+.project-edit-dialog h1 { margin:5px 0 0; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:23px; }
+.project-edit-dialog>header button { width:32px; height:32px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:#747a73; }
+.project-edit-dialog>header button:hover { background:#ebe9e1; }
+.project-edit-dialog>label { display:block; margin:14px 0 7px; color:#596159; font-size:12px; font-weight:700; }
+.project-edit-dialog>input,.project-edit-dialog>textarea { width:100%; border:1px solid #d8d5cc; border-radius:9px; outline:0; background:#fff; font-size:13px; }
+.project-edit-dialog>input { height:40px; padding:0 11px; }
+.project-edit-dialog>textarea { min-height:96px; padding:10px 11px; resize:vertical; line-height:1.6; }
+.project-edit-dialog>input:focus,.project-edit-dialog>textarea:focus { border-color:#718c78; box-shadow:0 0 0 3px #dfe8df; }
+.project-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; }
+.project-edit-actions button { height:38px; padding:0 16px; border-radius:8px; font-size:12px; font-weight:700; }
+.project-edit-actions button:first-child { border:1px solid #d8d5cc; background:#fff; }
+.project-edit-actions button:last-child { border:0; background:var(--green); color:#fff; }
+.project-edit-actions button:disabled { cursor:not-allowed; opacity:.45; }
 @keyframes pulse{50%{opacity:.3}}
 @media(max-width:1050px){.app{grid-template-columns:240px minmax(450px,1fr)}.sidebar.right{display:none}.editor-shell,.editor-shell.wide-view{grid-column:2}.right-open{display:block}}
 @media(max-width:720px){

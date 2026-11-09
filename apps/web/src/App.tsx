@@ -48,6 +48,9 @@ export function App() {
   const [view, setView] = useState<"home" | "library" | "documents" | "calendar" | "trash">("home");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [projectManagerOpen, setProjectManagerOpen] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string>();
+  const [projectTitleDraft, setProjectTitleDraft] = useState("");
+  const [projectDescriptionDraft, setProjectDescriptionDraft] = useState("");
   const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -134,6 +137,15 @@ export function App() {
       globalThis.document.removeEventListener("keydown", closeOnEscape);
     };
   }, [projectManagerOpen, projectMenuOpen]);
+
+  useEffect(() => {
+    if (!editingProjectId) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setEditingProjectId(undefined);
+    };
+    globalThis.document.addEventListener("keydown", closeOnEscape);
+    return () => globalThis.document.removeEventListener("keydown", closeOnEscape);
+  }, [editingProjectId]);
 
   const project = workspace.projects.find((item) => item.id === workspace.activeProjectId) ?? workspace.projects[0]!;
   const liveDocuments = project.documents.filter((item) => !item.deletedAt);
@@ -230,20 +242,24 @@ export function App() {
   const editProject = (projectId = project.id) => {
     const target = workspace.projects.find((item) => item.id === projectId);
     if (!target) return;
-    const titleInput = window.prompt(ko.project.namePrompt, target.title);
-    if (titleInput === null) return;
-    const title = titleInput.trim();
+    setEditingProjectId(target.id);
+    setProjectTitleDraft(target.title);
+    setProjectDescriptionDraft(target.description);
+    setProjectMenuOpen(false);
+    setProjectManagerOpen(false);
+  };
+
+  const saveProjectEdit = () => {
+    if (!editingProjectId) return;
+    const title = projectTitleDraft.trim();
     if (!title) return;
-    const descriptionInput = window.prompt(ko.project.descriptionPrompt, target.description);
-    if (descriptionInput === null) return;
-    const description = descriptionInput.trim();
-    if (title === target.title && description === target.description) return;
+    const description = projectDescriptionDraft.trim();
     setWorkspace((current) => ({
       ...current,
       revision: current.revision + 1,
-      projects: current.projects.map((item) => item.id === projectId ? { ...item, title, description } : item),
+      projects: current.projects.map((item) => item.id === editingProjectId ? { ...item, title, description } : item),
     }));
-    setProjectMenuOpen(false);
+    setEditingProjectId(undefined);
   };
 
   const addProject = () => {
@@ -483,6 +499,25 @@ export function App() {
         </>}
       </aside>
       {!rightOpen && !focus && view === "documents" && document && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
+
+      {editingProjectId && (
+        <div className="project-edit-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) setEditingProjectId(undefined); }}>
+          <form className="project-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="project-edit-title" onSubmit={(event) => { event.preventDefault(); saveProjectEdit(); }}>
+            <header>
+              <div><span>프로젝트 설정</span><h1 id="project-edit-title">프로젝트 정보 수정</h1></div>
+              <button type="button" aria-label="프로젝트 수정 닫기" onClick={() => setEditingProjectId(undefined)}><X size={17} /></button>
+            </header>
+            <label htmlFor="project-name">프로젝트 이름</label>
+            <input id="project-name" value={projectTitleDraft} onChange={(event) => setProjectTitleDraft(event.target.value)} autoFocus required />
+            <label htmlFor="project-description">프로젝트 설명</label>
+            <textarea id="project-description" value={projectDescriptionDraft} onChange={(event) => setProjectDescriptionDraft(event.target.value)} placeholder="프로젝트에 대한 설명을 입력하세요" rows={4} />
+            <div className="project-edit-actions">
+              <button type="button" onClick={() => setEditingProjectId(undefined)}>취소</button>
+              <button type="submit" disabled={!projectTitleDraft.trim()}>저장</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {showWelcome && (
         <div className="welcome-backdrop" role="presentation">
