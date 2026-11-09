@@ -84,6 +84,10 @@ export function App() {
         event.preventDefault();
         void completeAndSaveDocument();
       }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        setFocus((value) => !value);
+      }
     };
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
@@ -343,7 +347,7 @@ export function App() {
     <div className={`app ${focus ? "is-focus" : ""}`}>
       <header className="topbar">
         <button className="icon-button mobile-only" aria-label="메뉴 열기" onClick={() => setMobileMenu(true)}><Menu /></button>
-        <div className="brand"><span className="brand-mark">O</span><span>{ko.appName}</span></div>
+        <button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span><span>{ko.appName}</span></button>
         <div className="project-switcher-wrap" ref={projectMenuRef}>
           <button className={`project-switcher ${projectMenuOpen ? "open" : ""}`} aria-label="프로젝트 메뉴 열기" aria-expanded={projectMenuOpen} onClick={() => { setProjectMenuOpen((value) => !value); setProjectManagerOpen(false); }}>
             <span>{project.title}</span><ChevronDown size={15} />
@@ -381,13 +385,13 @@ export function App() {
             {online ? <Wifi size={17} /> : <WifiOff size={17} />}
           </button>
           <button className="text-button help-button" onClick={() => setShowWelcome(true)}><HelpCircle size={17} />도움말</button>
-          <button className="text-button" onClick={() => setFocus((value) => !value)}><Focus size={17} />{focus ? "나가기" : ko.focus}</button>
+          <button className="text-button" onClick={() => setFocus((value) => !value)} title="집중 모드 (⌘ Enter)" aria-keyshortcuts="Meta+Enter Control+Enter"><Focus size={17} />{focus ? "나가기" : ko.focus}</button>
           <button className="avatar" aria-label="계정 메뉴">윤</button>
         </div>
       </header>
 
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
-        <div className="sidebar-mobile-head"><div className="brand"><span className="brand-mark">O</span>{ko.appName}</div><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
+        <div className="sidebar-mobile-head"><button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span>{ko.appName}</button><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
         <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation" aria-label="문서 탐색">
@@ -466,7 +470,11 @@ export function App() {
           </section>
         ) : document ? (<>
         <div className="document-header">
-          <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
+          <div className="breadcrumb">
+            <span>{project.title}</span><span>/</span><span>{document.folder}</span><span>/</span>
+            <input className="breadcrumb-title" value={document.title} onChange={(event) => updateDocument({ title: event.target.value })} aria-label="글 제목" />
+          </div>
+          <div className="document-header-meta"><span className={`status-pill ${statusTone[document.status]}`}>{statusLabel[document.status]}</span><span>{new Date(document.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })} 수정</span></div>
           <div className="document-tools">
             <button className="tool-button" aria-label="글 저장 및 완료" onClick={() => void completeAndSaveDocument()}><Check size={16} /><span>저장</span></button>
             <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={() => moveToTrash()}><Trash2 size={15} /><span>삭제</span></button>
@@ -474,8 +482,6 @@ export function App() {
           </div>
         </div>
         <article className="editor">
-          <input className="title-input" value={document.title} onChange={(event) => updateDocument({ title: event.target.value })} aria-label="글 제목" />
-          <div className="meta-line"><span className={`status-pill ${statusTone[document.status]}`}>{statusLabel[document.status]}</span><span>{new Date(document.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })} 수정</span></div>
           <textarea ref={editorRef} value={document.content} onChange={(event) => updateBody(event.target.value)} spellCheck aria-label="본문 편집기" placeholder="여기를 눌러 이야기를 시작하세요. Markdown 문법도 사용할 수 있어요." />
         </article>
         <footer className="editor-footer"><span>{characters.toLocaleString()}자</span><span>약 {Math.max(1, Math.ceil(characters / 600))}분 읽기</span><span>Markdown</span></footer>
