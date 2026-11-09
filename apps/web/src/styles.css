@@ -197,9 +197,9 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .trash-list article { height:52px; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 10px; border-top:1px solid var(--line); background:transparent; }
 .trash-list article:first-child { border-top:0; }
 .trash-list article:hover { background:#f0eee7; }
-.trash-list article>div:first-child { min-width:0; }
-.trash-list article strong { display:block; overflow:hidden; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
-.trash-list article p { margin:4px 0 0; overflow:hidden; color:#92958e; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.trash-list article>div:first-child { min-width:0; flex:1; display:flex; align-items:center; gap:12px; overflow:hidden; }
+.trash-list article strong { min-width:80px; max-width:45%; overflow:hidden; flex:none; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+.trash-list article p { min-width:0; margin:0; overflow:hidden; color:#858a83; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
 .trash-actions { display:flex; gap:6px; flex:none; }
 .trash-actions button { height:30px; padding:0 9px; border-radius:7px; display:flex; align-items:center; gap:5px; font-size:9px; }
 .restore-button { border:1px solid #cfd8cf; background:#eef3ed; color:#476652; }
