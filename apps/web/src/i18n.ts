@@ -14,7 +14,7 @@ export const ko = {
   },
   allDocuments: "모든 글",
   documentList: {
-    title: "글 라이브러리",
+    title: "글 목록",
     emptyBody: "아직 작성된 내용이 없습니다.",
     created: "작성",
   },
