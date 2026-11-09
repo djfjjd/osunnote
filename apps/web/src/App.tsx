@@ -87,7 +87,7 @@ export function App() {
         setMobileMenu(true);
         window.setTimeout(() => searchRef.current?.focus(), 0);
       }
-      if (event.key.toLocaleLowerCase() === "n") {
+      if (event.key.toLocaleLowerCase() === "n" && event.altKey) {
         event.preventDefault();
         addDocument();
       }
@@ -433,7 +433,7 @@ export function App() {
         <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation" aria-label="문서 탐색">
-          <button className="nav-item" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
+          <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />{ko.newDocument}<span>⌘⌥N</span></button>
           <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />{ko.calendar}</button>
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
@@ -626,7 +626,7 @@ export function App() {
             <div className="welcome-steps">
               <article><span><PencilLine size={19} /></span><div><strong>1. 제목과 본문 쓰기</strong><p>가운데 편집 영역을 누르고 자유롭게 작성하세요.</p></div></article>
               <article><span><ShieldCheck size={19} /></span><div><strong>2. 자동 저장 확인</strong><p>상단의 ‘이 기기에 저장됨’ 표시가 글을 지켜줍니다.</p></div></article>
-              <article><span><Keyboard size={19} /></span><div><strong>3. 빠르게 찾고 추가하기</strong><p><kbd>⌘K</kbd>로 검색하고 <kbd>⌘N</kbd>으로 새 글을 만드세요.</p></div></article>
+              <article><span><Keyboard size={19} /></span><div><strong>3. 빠르게 찾고 추가하기</strong><p><kbd>⌘K</kbd>로 검색하고 <kbd>⌘⌥N</kbd>으로 새 글을 만드세요.</p></div></article>
             </div>
             <div className="welcome-actions">
               <button className="welcome-secondary" onClick={() => { addDocument(); closeWelcome(true); }}><FilePlus2 size={17} />새 글부터 만들기</button>
