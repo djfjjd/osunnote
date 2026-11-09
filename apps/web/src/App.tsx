@@ -14,6 +14,7 @@ import { readWorkspace, writeWorkspace } from "./storage";
 import { CalendarPage } from "./CalendarPage";
 import { TopbarCalendar } from "./TopbarCalendar";
 import { HomePage } from "./HomePage";
+import { DocumentListPage } from "./DocumentListPage";
 
 const statusLabel: Record<DocumentStatus, string> = { idea: "아이디어", draft: "초고", review: "다듬는 중", done: "완료" };
 const statusTone: Record<DocumentStatus, string> = { idea: "blue", draft: "amber", review: "violet", done: "green" };
@@ -44,7 +45,7 @@ export function App() {
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [storageError, setStorageError] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [view, setView] = useState<"home" | "documents" | "calendar" | "trash">("home");
+  const [view, setView] = useState<"home" | "library" | "documents" | "calendar" | "trash">("home");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
@@ -246,7 +247,7 @@ export function App() {
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation" aria-label="문서 탐색">
           <button className="nav-item" onClick={addDocument}><FilePlus2 size={17} />{ko.newDocument}<span>⌘N</span></button>
-          <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => setView("documents")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
+          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />{ko.calendar}</button>
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
           <button className="nav-item"><Hash size={17} />태그</button>
@@ -295,6 +296,8 @@ export function App() {
             onOpenDocument={selectDocument}
             onOpenCalendar={() => setView("calendar")}
           />
+        ) : view === "library" ? (
+          <DocumentListPage documents={liveDocuments} onOpenDocument={selectDocument} onNewDocument={addDocument} />
         ) : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
           <section className="trash-page">
             <header>

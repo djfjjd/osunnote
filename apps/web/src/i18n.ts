@@ -3,6 +3,12 @@ export const ko = {
   search: "글과 태그 검색",
   newDocument: "새 글",
   allDocuments: "모든 글",
+  documentList: {
+    eyebrow: "글 라이브러리",
+    description: "작성한 글을 한눈에 확인하고 이어서 쓸 수 있습니다.",
+    emptyBody: "아직 작성된 내용이 없습니다.",
+    created: "작성",
+  },
   calendar: "캘린더",
   home: {
     nav: "홈",
