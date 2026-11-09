@@ -37,6 +37,15 @@ const isWorkspace = (value: unknown): value is Workspace => {
   );
 };
 
+const normalizeWorkspace = (workspace: Workspace): Workspace => ({
+  ...workspace,
+  projects: workspace.projects.map((project) => {
+    const storedFolders = Array.isArray(project.folders) ? project.folders.filter((folder): folder is string => typeof folder === "string") : [];
+    const folders = [...new Set([...storedFolders, ...project.documents.map((document) => document.folder)])];
+    return { ...project, folders };
+  }),
+});
+
 const openDatabase = (): Promise<IDBDatabase> => {
   databasePromise ??= new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DATABASE_VERSION);
@@ -72,8 +81,8 @@ export const readWorkspace = async (): Promise<Workspace | undefined> => {
     const primaryRequest = store.get(KEY);
     const backupRequest = store.get(BACKUP_KEY);
     transaction.oncomplete = () => {
-      if (isWorkspace(primaryRequest.result)) return resolve(primaryRequest.result);
-      if (isWorkspace(backupRequest.result)) return resolve(backupRequest.result);
+      if (isWorkspace(primaryRequest.result)) return resolve(normalizeWorkspace(primaryRequest.result));
+      if (isWorkspace(backupRequest.result)) return resolve(normalizeWorkspace(backupRequest.result));
       if (primaryRequest.result === undefined && backupRequest.result === undefined) return resolve(undefined);
       reject(new Error("Stored workspace is invalid"));
     };

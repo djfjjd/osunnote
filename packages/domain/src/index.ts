@@ -24,6 +24,7 @@ export interface Project {
   id: string;
   title: string;
   description: string;
+  folders: string[];
   documents: WritingDocument[];
   createdAt: number;
 }
@@ -65,6 +66,7 @@ export const initialWorkspace = (): Workspace => {
   };
   const project: Project = {
     id: makeId(), title: "유리창 너머의 계절", description: "도시와 기억에 관한 장편소설", createdAt: now,
+    folders: ["원고", "자료"],
     documents: [opening, characters],
   };
   return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id };

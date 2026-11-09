@@ -91,7 +91,7 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .nav-item span { margin-left:auto; font-size:10px; color:#92958f; }
 .tree-label { flex:none; display:flex; align-items:center; justify-content:space-between; padding:17px 8px 8px; color:#92958f; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
 .tree-label button { border:0; background:transparent; color:inherit; }
-.project-manager-wrap { position:relative; }
+.project-manager-wrap { position:relative; display:flex; align-items:center; gap:2px; }
 .project-manager-wrap>button { width:28px; height:28px; display:grid; place-items:center; padding:0; border-radius:7px; }
 .project-manager-wrap>button:hover { background:#e5e2da; color:#4d6354; }
 .project-manager-menu { position:absolute; z-index:25; top:31px; right:0; width:250px; padding:13px; border:1px solid #d8d5cc; border-radius:11px; background:#fbfaf6; box-shadow:0 14px 34px rgba(36,42,36,.18); text-transform:none; letter-spacing:0; }
@@ -109,7 +109,10 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .document-tree::-webkit-scrollbar { width:7px; }
 .document-tree::-webkit-scrollbar-thumb { border:2px solid transparent; border-radius:10px; background:#c5c8c0; background-clip:padding-box; }
 .folder-row { height:32px; display:flex; align-items:center; gap:7px; padding:0 8px; font-size:11px; font-weight:600; }
-.folder-row span:last-child { margin-left:auto; color:#9a9d96; font-weight:400; }
+.folder-row>span:nth-of-type(2) { margin-left:auto; color:#9a9d96; font-weight:400; }
+.folder-row>button { width:25px; height:25px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:6px; background:transparent; color:#8b918a; opacity:.55; }
+.folder-row:hover>button,.folder-row>button:focus-visible { opacity:1; }
+.folder-row>button:hover { background:#e2e6df; color:#466b56; }
 .document-row { width:100%; min-height:47px; background:transparent; display:flex; align-items:center; padding:2px 5px 2px 14px; border-radius:8px; }
 .document-row:hover { background:#ece9e1; }
 .document-row.selected { background:#dde5dc; box-shadow:inset 2px 0 #496c55; }

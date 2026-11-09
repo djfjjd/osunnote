@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Clock3, Download, FilePlus2,
-  Folder, Focus, Hash, HelpCircle, House, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
+  Folder, FolderPlus, Focus, Hash, HelpCircle, House, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
   PanelRightClose, PencilLine, RotateCcw, Search, Settings2, ShieldCheck, Sparkles,
   Trash2, Wifi, WifiOff, X,
 } from "lucide-react";
@@ -23,6 +23,15 @@ const download = (filename: string, body: string, type = "text/plain") => {
   const url = URL.createObjectURL(new Blob([body], { type }));
   const anchor = document.createElement("a");
   anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
+};
+
+const folderHierarchy = (paths: string[]): string[] => {
+  const expanded = new Set<string>();
+  paths.forEach((path) => {
+    const parts = path.split("/").map((part) => part.trim()).filter(Boolean);
+    parts.forEach((_, index) => expanded.add(parts.slice(0, index + 1).join("/")));
+  });
+  return [...expanded].sort((a, b) => a.localeCompare(b, "ko-KR"));
 };
 
 const shouldShowWelcome = (): boolean => {
@@ -156,7 +165,7 @@ export function App() {
   const document = liveDocuments.find((item) => item.id === workspace.activeDocumentId) ?? liveDocuments[0];
   const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
-  const folders = [...new Set(filtered.map((item) => item.folder))];
+  const folders = folderHierarchy([...(project.folders ?? []), ...filtered.map((item) => item.folder)]);
   const characters = countCharacters(document?.content ?? "");
   const progress = document ? Math.min(100, Math.round((characters / Math.max(document.goal, 1)) * 100)) : 0;
 
@@ -277,6 +286,7 @@ export function App() {
     const created = createDocument();
     const createdProject = {
       id: crypto.randomUUID(), title, description,
+      folders: ["원고"],
       documents: [created], createdAt: Date.now(),
     };
     setWorkspace((current) => ({
@@ -321,6 +331,21 @@ export function App() {
     if (projectId === workspace.activeProjectId) setView("home");
     setProjectMenuOpen(false);
     setProjectManagerOpen(false);
+  };
+
+  const addFolder = (parent = "") => {
+    const input = window.prompt(parent ? `‘${parent}’ 안에 만들 하위 폴더 이름` : "새 폴더 이름");
+    if (input === null) return;
+    const childPath = input.split("/").map((part) => part.trim()).filter(Boolean).join("/");
+    if (!childPath) return;
+    const path = parent ? `${parent}/${childPath}` : childPath;
+    setWorkspace((current) => ({
+      ...current,
+      revision: current.revision + 1,
+      projects: current.projects.map((item) => item.id === project.id
+        ? { ...item, folders: folderHierarchy([...(item.folders ?? []), path]) }
+        : item),
+    }));
   };
 
   const closeWelcome = (focusEditor = false) => {
@@ -401,11 +426,21 @@ export function App() {
           <button className="nav-item"><Clock3 size={17} />최근 작업</button>
           <button className="nav-item"><Hash size={17} />태그</button>
         </nav>
-        <div className="tree-label"><span>프로젝트</span><div className="project-manager-wrap" ref={projectManagerRef}><button aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>{projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button><button type="button" className="project-manager-delete" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}</div></div>
+        <div className="tree-label">
+          <span>프로젝트</span>
+          <div className="project-manager-wrap" ref={projectManagerRef}>
+            <button type="button" aria-label="최상위 폴더 추가" title="폴더 추가" onClick={() => addFolder()}><FolderPlus size={15} /></button>
+            <button type="button" aria-label="프로젝트 옵션" aria-expanded={projectManagerOpen} onClick={() => { setProjectManagerOpen((value) => !value); setProjectMenuOpen(false); }}><MoreHorizontal size={16} /></button>
+            {projectManagerOpen && <div className="project-manager-menu"><strong>{ko.project.manage}</strong><div className="project-manager-list">{workspace.projects.map((item) => <div className={item.id === project.id ? "active" : ""} key={item.id}><button type="button" onClick={() => selectProject(item.id)}><span>{item.title}</span><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button><button type="button" className="project-manager-edit" onClick={() => editProject(item.id)} aria-label={`${item.title} ${ko.project.edit}`} title={ko.project.edit}><PencilLine size={13} /></button><button type="button" className="project-manager-delete" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={13} /></button></div>)}</div><button type="button" className="project-manager-add" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button></div>}
+          </div>
+        </div>
         <div className="document-tree">
           {folders.map((folder) => (
             <section key={folder}>
-              <div className="folder-row"><Folder size={16} /><span>{folder}</span><span>{filtered.filter((item) => item.folder === folder).length}</span></div>
+              <div className="folder-row" style={{ paddingLeft: `${8 + (folder.split("/").length - 1) * 16}px` }}>
+                <Folder size={16} /><span>{folder.split("/").at(-1)}</span><span>{filtered.filter((item) => item.folder === folder).length}</span>
+                <button type="button" onClick={() => addFolder(folder)} aria-label={`${folder}에 하위 폴더 추가`} title="하위 폴더 추가"><FolderPlus size={13} /></button>
+              </div>
               {filtered.filter((item) => item.folder === folder).map((item) => (
                 <div key={item.id} className={`document-row ${item.id === document?.id ? "selected" : ""}`}>
                   <button className="document-select" onClick={() => selectDocument(item.id)} aria-label={`${item.title} 열기`}>
