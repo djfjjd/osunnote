@@ -139,8 +139,8 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .home-actions>button>span svg { width:17px; }
 .home-actions>button>svg { width:15px; color:#9a9e97; }
 .home-actions strong,.home-actions small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.home-actions strong { font-size:12px; }
-.home-actions small { margin-top:5px; color:#8c9089; font-size:9px; }
+.home-actions strong { font-size:15px; }
+.home-actions small { margin-top:6px; color:#777d75; font-size:12px; }
 .home-primary-action>span { background:#405f4b!important; color:#fff!important; }
 .home-overview { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,.8fr); gap:48px; margin-top:50px; }
 .home-recent>header { display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:14px; border-bottom:2px solid #30352f; }
