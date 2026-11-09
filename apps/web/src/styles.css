@@ -231,29 +231,31 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .calendar-day.outside { background:#f7f5ef; opacity:.42; }
 .calendar-day.today time { background:var(--green); color:#fff; }
 .calendar-source { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding-top:12px; color:#8b8f88; font-size:9px; }
-.inspector-title { height:50px; padding:0 15px 0 19px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; font-size:11px; font-weight:600; }
-.inspector-section { margin:0 17px; padding:20px 2px; border-bottom:1px solid var(--line); }
-.section-head { display:flex; align-items:center; justify-content:space-between; font-size:11px; }
+.inspector-title { height:52px; padding:0 15px 0 19px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; font-size:14px; font-weight:700; }
+.inspector-section { margin:0 17px; padding:22px 2px; border-bottom:1px solid var(--line); }
+.section-head { display:flex; align-items:center; justify-content:space-between; font-size:13px; }
 .section-head strong { color:var(--green); }
 .progress { height:5px; border-radius:5px; background:#e4e3dc; margin:13px 0 10px; overflow:hidden; }
 .progress i { display:block; height:100%; border-radius:5px; background:#60846a; transition:width .3s; }
-.goal-card p { margin:0; color:#93968f; font-size:10px; }
-.goal-card p strong { color:#444943; font-size:12px; }
-.goal-card input { width:48px; border:0; border-bottom:1px solid #ccc8be; background:transparent; text-align:center; font-size:10px; }
-.inspector-section label { display:block; color:#92958f; font-size:9px; margin-bottom:7px; }
-.inspector-section select { width:100%; height:34px; padding:0 9px; border:1px solid #dedbd2; border-radius:7px; background:#fbfaf6; font-size:11px; margin-bottom:17px; }
+.goal-card p { margin:0; color:#858a83; font-size:12px; }
+.goal-card p strong { color:#3e443e; font-size:15px; }
+.goal-card input { width:60px; border:0; border-bottom:1px solid #bbbfb7; background:transparent; text-align:center; font-size:13px; font-weight:600; }
+.inspector-section label { display:block; color:#777d76; font-size:12px; font-weight:600; margin-bottom:9px; }
+.inspector-section select { width:100%; height:40px; padding:0 11px; border:1px solid #d4d1c8; border-radius:8px; background:#fbfaf6; font-size:13px; margin-bottom:20px; }
 .tags { display:flex; flex-wrap:wrap; gap:5px; }
-.tags button { border:0; border-radius:20px; background:#e7e5dc; padding:5px 8px; display:flex; align-items:center; gap:4px; font-size:9px; }
+.tags button { min-height:30px; border:0; border-radius:20px; background:#e7e5dc; padding:6px 10px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; }
+.tags button svg { width:13px; height:13px; }
 .tags .add-tag { background:transparent; border:1px dashed #cfccc3; }
 .version-section { min-height:125px; }
-.version-section .muted { font-size:10px; color:#999c95; line-height:1.7; }
-.version-row { width:100%; border:0; background:transparent; display:flex; align-items:center; gap:7px; padding:7px 4px; font-size:10px; text-align:left; }
+.version-section .section-head small { font-size:11px; }
+.version-section .muted { font-size:12px; color:#858a83; line-height:1.7; }
+.version-row { width:100%; min-height:34px; border:0; background:transparent; display:flex; align-items:center; gap:8px; padding:8px 4px; font-size:12px; text-align:left; }
 .version-row:hover { color:var(--green); }
-.version-row small { margin-left:auto; color:#9a9d96; }
+.version-row small { margin-left:auto; color:#858a83; font-size:10px; }
 .export-card { margin-top:15px; padding:14px; border:0; border-radius:10px; background:#e5e9df; display:grid; grid-template-columns:auto 1fr; gap:9px; color:#496452; }
-.export-card strong { font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:12px; }
-.export-card p { margin:3px 0 0; font-size:9px; color:#778079; }
-.export-card button { grid-column:1/-1; border:0; height:30px; border-radius:7px; background:#526f5b; color:#fff; font-size:10px; }
+.export-card strong { font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:14px; }
+.export-card p { margin:4px 0 0; font-size:11px; line-height:1.5; color:#68726a; }
+.export-card button { grid-column:1/-1; border:0; height:36px; border-radius:7px; background:#526f5b; color:#fff; font-size:12px; font-weight:700; }
 .edge-open { position:fixed; z-index:8; top:70px; width:34px; height:34px; border:1px solid var(--line); background:#f5f2ea; border-radius:8px; }
 .left-open { left:10px; }.right-open { right:10px; }
 .empty-search { color:#999c95; font-size:11px; text-align:center; padding-top:20px; }
