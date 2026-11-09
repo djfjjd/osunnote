@@ -136,13 +136,13 @@ export function App() {
   }, [projectManagerOpen, projectMenuOpen]);
 
   const project = workspace.projects.find((item) => item.id === workspace.activeProjectId) ?? workspace.projects[0]!;
-  const document = project.documents.find((item) => item.id === workspace.activeDocumentId) ?? project.documents[0]!;
   const liveDocuments = project.documents.filter((item) => !item.deletedAt);
+  const document = liveDocuments.find((item) => item.id === workspace.activeDocumentId) ?? liveDocuments[0];
   const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
   const folders = [...new Set(filtered.map((item) => item.folder))];
-  const characters = countCharacters(document.content);
-  const progress = Math.min(100, Math.round((characters / Math.max(document.goal, 1)) * 100));
+  const characters = countCharacters(document?.content ?? "");
+  const progress = document ? Math.min(100, Math.round((characters / Math.max(document.goal, 1)) * 100)) : 0;
 
   const selectDocument = (id: string) => {
     setWorkspace((current) => ({ ...current, activeDocumentId: id }));
@@ -151,12 +151,17 @@ export function App() {
   };
 
   const updateDocument = (patch: Partial<WritingDocument>, snapshot = false) => {
+    if (!document) return;
     setWorkspace((current) => saveDocument(current, document.id, patch, snapshot));
   };
 
   async function completeAndSaveDocument() {
     const current = workspaceRef.current;
-    const next = saveDocument(current, current.activeDocumentId, { status: "done" }, true);
+    const currentProject = current.projects.find((item) => item.id === current.activeProjectId);
+    const activeDocument = currentProject?.documents.find((item) => item.id === current.activeDocumentId && !item.deletedAt)
+      ?? currentProject?.documents.find((item) => !item.deletedAt);
+    if (!activeDocument) return;
+    const next = saveDocument(current, activeDocument.id, { status: "done" }, true);
     workspaceRef.current = next;
     setWorkspace(next);
     setSaveState("saving");
@@ -184,12 +189,12 @@ export function App() {
     setMobileMenu(false);
   };
 
-  const moveToTrash = (documentId = document.id) => {
+  const moveToTrash = (documentId = document?.id) => {
+    if (!documentId) return;
     const next = liveDocuments.find((item) => item.id !== documentId);
-    if (!next) return;
     setWorkspace((current) => {
       const updated = saveDocument(current, documentId, { deletedAt: Date.now() } as Partial<WritingDocument>);
-      return documentId === current.activeDocumentId ? { ...updated, activeDocumentId: next.id } : updated;
+      return documentId === current.activeDocumentId && next ? { ...updated, activeDocumentId: next.id } : updated;
     });
   };
 
@@ -361,7 +366,7 @@ export function App() {
             <section key={folder}>
               <div className="folder-row"><Folder size={16} /><span>{folder}</span><span>{filtered.filter((item) => item.folder === folder).length}</span></div>
               {filtered.filter((item) => item.folder === folder).map((item) => (
-                <div key={item.id} className={`document-row ${item.id === document.id ? "selected" : ""}`}>
+                <div key={item.id} className={`document-row ${item.id === document?.id ? "selected" : ""}`}>
                   <button className="document-select" onClick={() => selectDocument(item.id)} aria-label={`${item.title} 열기`}>
                     <span className={`status-dot ${statusTone[item.status]}`} />
                     <span className="document-copy"><strong>{item.title}</strong><small>{countCharacters(item.content).toLocaleString()}자 · {statusLabel[item.status]}</small></span>
@@ -369,9 +374,8 @@ export function App() {
                   <button
                     className="document-delete"
                     onClick={() => moveToTrash(item.id)}
-                    disabled={liveDocuments.length <= 1}
                     aria-label={`${item.title} 휴지통으로 이동`}
-                    title={liveDocuments.length <= 1 ? "마지막 글은 삭제할 수 없습니다" : "휴지통으로 이동"}
+                    title="휴지통으로 이동"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -423,12 +427,12 @@ export function App() {
               </div>
             )}
           </section>
-        ) : (<>
+        ) : document ? (<>
         <div className="document-header">
           <div className="breadcrumb"><span>{project.title}</span><span>/</span><span>{document.folder}</span></div>
           <div className="document-tools">
             <button className="tool-button" aria-label="글 저장 및 완료" onClick={() => void completeAndSaveDocument()}><Check size={16} /><span>저장</span></button>
-            <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={() => moveToTrash()} disabled={liveDocuments.length <= 1}><Trash2 size={15} /><span>삭제</span></button>
+            <button className="tool-button danger" aria-label="휴지통으로 이동" onClick={() => moveToTrash()}><Trash2 size={15} /><span>삭제</span></button>
             <button className="icon-button desktop-only" aria-label="오른쪽 패널 닫기" onClick={() => setRightOpen((value) => !value)}><PanelRightClose size={17} /></button>
           </div>
         </div>
@@ -438,10 +442,18 @@ export function App() {
           <textarea ref={editorRef} value={document.content} onChange={(event) => updateBody(event.target.value)} spellCheck aria-label="본문 편집기" placeholder="여기를 눌러 이야기를 시작하세요. Markdown 문법도 사용할 수 있어요." />
         </article>
         <footer className="editor-footer"><span>{characters.toLocaleString()}자</span><span>약 {Math.max(1, Math.ceil(characters / 600))}분 읽기</span><span>Markdown</span></footer>
-        </>)}
+        </>) : (
+          <section className="empty-documents">
+            <span><PencilLine size={25} /></span>
+            <h1>아직 작성한 글이 없습니다</h1>
+            <p>새 글을 만들고 이야기를 시작해 보세요.</p>
+            <button type="button" onClick={addDocument}><FilePlus2 size={17} />+ 새 글 작성하기</button>
+          </section>
+        )}
       </main>
 
-      <aside className={`sidebar right ${rightOpen && view === "documents" ? "" : "collapsed"}`}>
+      <aside className={`sidebar right ${rightOpen && view === "documents" && document ? "" : "collapsed"}`}>
+        {document && <>
         <div className="inspector-title"><span>{ko.details}</span><button className="icon-button" aria-label="글 정보 닫기" onClick={() => setRightOpen(false)}><X size={16} /></button></div>
         <section className="inspector-section goal-card">
           <div className="section-head"><span>오늘의 목표</span><strong>{progress}%</strong></div>
@@ -468,8 +480,9 @@ export function App() {
           <Sparkles size={19} /><div><strong>내 글은 내 것으로</strong><p>언제든 표준 형식으로 보관하세요.</p></div>
           <button onClick={() => download(`${document.title}.txt`, document.content)}><Download size={15} />{ko.export}</button>
         </section>
+        </>}
       </aside>
-      {!rightOpen && !focus && view === "documents" && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
+      {!rightOpen && !focus && view === "documents" && document && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
 
       {showWelcome && (
         <div className="welcome-backdrop" role="presentation">
