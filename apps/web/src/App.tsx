@@ -507,11 +507,15 @@ export function App() {
         </section>
         <section className="inspector-section version-section">
           <div className="section-head"><span>{ko.versions}</span><small>최근 {document.versions.length}개</small></div>
-          {document.versions.length === 0 ? <p className="muted">글을 수정하면 이전 내용이 여기에 안전하게 남습니다.</p> : document.versions.slice(0, 5).map((version) => (
-            <button className="version-row" key={version.id} onClick={() => restoreVersion(version.content)}>
-              <ArchiveRestore size={15} /><span>{new Date(version.savedAt).toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span><small>{countCharacters(version.content)}자</small>
-            </button>
-          ))}
+          {document.versions.length === 0 ? <p className="muted">글을 수정하면 이전 내용이 여기에 안전하게 남습니다.</p> : (
+            <div className="version-list">
+              {document.versions.map((version) => (
+                <button className="version-row" key={version.id} onClick={() => restoreVersion(version.content)}>
+                  <ArchiveRestore size={15} /><span>{new Date(version.savedAt).toLocaleString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span><small>{countCharacters(version.content)}자</small>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
         <section className="inspector-section export-card">
           <Sparkles size={19} /><div><strong>내 글은 내 것으로</strong><p>언제든 표준 형식으로 보관하세요.</p></div>
