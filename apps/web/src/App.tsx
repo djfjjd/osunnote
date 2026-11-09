@@ -423,7 +423,7 @@ export function App() {
             {online ? <Wifi size={17} /> : <WifiOff size={17} />}
           </button>
           <button className="text-button help-button" onClick={() => setShowWelcome(true)}><HelpCircle size={17} />도움말</button>
-          <button className="text-button" onClick={() => setFocus((value) => !value)} title="집중 모드 (⌘ Enter)" aria-keyshortcuts="Meta+Enter Control+Enter"><Focus size={17} />{focus ? "나가기" : ko.focus}</button>
+          <button className="text-button focus-button" onClick={() => setFocus((value) => !value)} title="집중 모드 (⌘ Enter)" aria-keyshortcuts="Meta+Enter Control+Enter"><Focus size={17} />{focus ? "나가기" : ko.focus}<kbd>⌘ Enter</kbd></button>
           <button className="avatar" aria-label="계정 메뉴">윤</button>
         </div>
       </header>
