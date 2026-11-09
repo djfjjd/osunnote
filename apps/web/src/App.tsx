@@ -376,8 +376,8 @@ export function App() {
                   <article key={item.id}>
                     <div><strong>{item.title}</strong><p>{item.folder} · {countCharacters(item.content).toLocaleString()}자 · {new Date(item.deletedAt!).toLocaleDateString("ko-KR")} 삭제</p></div>
                     <div className="trash-actions">
-                      <button className="restore-button" onClick={() => restoreDocument(item.id)}><RotateCcw size={15} />복원</button>
-                      <button className="delete-forever-button" onClick={() => deleteForever(item.id)}><Trash2 size={15} />영구 삭제</button>
+                      <button className="restore-button" onClick={() => restoreDocument(item.id)}><RotateCcw size={15} /><span>복원</span></button>
+                      <button className="delete-forever-button" onClick={() => deleteForever(item.id)}><Trash2 size={15} /><span>영구 삭제</span></button>
                     </div>
                   </article>
                 ))}
