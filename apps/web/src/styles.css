@@ -138,7 +138,6 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .empty-documents button:hover { background:#34513f; }
 .home-page { width:min(1080px,calc(100% - 72px)); margin:0 auto; padding:58px 0 70px; overflow:auto; }
 .home-heading { max-width:690px; }
-.home-heading>p { margin:0 0 14px; color:#758078; font-size:11px; font-weight:600; }
 .home-heading h1 { margin:0; font-family:"Iowan Old Style","AppleMyungjo",serif; color:#29312b; font-size:42px; line-height:1.25; letter-spacing:-.045em; }
 .home-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:40px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .home-actions>button { min-width:0; min-height:88px; display:grid; grid-template-columns:36px minmax(0,1fr) 18px; align-items:center; gap:11px; padding:16px 18px; border:0; border-left:1px solid var(--line); background:transparent; text-align:left; }

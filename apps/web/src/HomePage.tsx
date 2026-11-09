@@ -18,14 +18,9 @@ export function HomePage({ project, documents, onNewDocument, onOpenDocument, on
   const recent = [...documents].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
   const totalCharacters = documents.reduce((sum, document) => sum + countCharacters(document.content), 0);
   const completed = documents.filter((document) => document.status === "done").length;
-  const today = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric", weekday: "long",
-  }).format(new Date());
-
   return (
     <section className="home-page">
       <header className="home-heading">
-        <p>{today}</p>
         <h1>{ko.home.headlineFirst}<br />{ko.home.headlineSecond}</h1>
       </header>
 
