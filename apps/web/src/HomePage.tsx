@@ -27,7 +27,6 @@ export function HomePage({ project, documents, onNewDocument, onOpenDocument, on
       <header className="home-heading">
         <p>{today}</p>
         <h1>{ko.home.headlineFirst}<br />{ko.home.headlineSecond}</h1>
-        <span>{ko.home.introduction}</span>
       </header>
 
       <div className="home-actions" aria-label="빠른 작업">
@@ -44,7 +43,7 @@ export function HomePage({ project, documents, onNewDocument, onOpenDocument, on
 
       <div className="home-overview">
         <section className="home-recent">
-          <header><div><span>{ko.home.recent}</span><h2>{ko.home.recentDocuments}</h2></div><BookOpen /></header>
+          <header><div><h2>{ko.home.recent}</h2></div><BookOpen /></header>
           <div className="home-recent-list">
             {recent.map((document) => (
               <button type="button" key={document.id} onClick={() => onOpenDocument(document.id)}>

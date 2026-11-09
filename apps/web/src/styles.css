@@ -124,7 +124,6 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .home-heading { max-width:690px; }
 .home-heading>p { margin:0 0 14px; color:#758078; font-size:11px; font-weight:600; }
 .home-heading h1 { margin:0; font-family:"Iowan Old Style","AppleMyungjo",serif; color:#29312b; font-size:42px; line-height:1.25; letter-spacing:-.045em; }
-.home-heading>span { display:block; margin-top:14px; color:#7d817b; font-size:12px; line-height:1.7; }
 .home-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:40px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .home-actions>button { min-width:0; min-height:88px; display:grid; grid-template-columns:36px minmax(0,1fr) 18px; align-items:center; gap:11px; padding:16px 18px; border:0; border-left:1px solid var(--line); background:transparent; text-align:left; }
 .home-actions>button:first-child { border-left:0; }
@@ -140,7 +139,8 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .home-overview { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,.8fr); gap:48px; margin-top:50px; }
 .home-recent>header { display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:14px; border-bottom:2px solid #30352f; }
 .home-recent>header span,.home-project-summary>span { color:#728079; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
-.home-recent h2,.home-project-summary h2 { margin:6px 0 0; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:21px; }
+.home-recent h2 { margin:0; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:21px; }
+.home-project-summary h2 { margin:6px 0 0; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:21px; }
 .home-recent>header svg { width:19px; color:#657169; }
 .home-recent-list>button { width:100%; min-height:66px; display:grid; grid-template-columns:minmax(0,1fr) auto 18px; align-items:center; gap:14px; padding:11px 4px; border:0; border-bottom:1px solid #e3e0d7; background:transparent; text-align:left; }
 .home-recent-list>button:hover { padding-left:10px; background:#f4f2eb; }
