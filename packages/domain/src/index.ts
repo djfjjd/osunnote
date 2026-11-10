@@ -50,6 +50,7 @@ export interface HomeWidget {
   id: string;
   type: HomeWidgetType;
   size: HomeWidgetSize;
+  gridSlot?: number;
 }
 
 export interface HomePageData {
@@ -117,10 +118,10 @@ export const createHomeWorkspace = (projectId?: string, projectTitle = "나의 �
       updatedAt: now,
       blocks: [{ id: makeId(), type: "text", content: "" }],
       widgets: [
-        { id: makeId(), type: "tasks", size: "small" },
-        { id: makeId(), type: "upcoming", size: "small" },
-        { id: makeId(), type: "recent-documents", size: "small" },
-        { id: makeId(), type: "finance", size: "small" },
+        { id: makeId(), type: "tasks", size: "small", gridSlot: 0 },
+        { id: makeId(), type: "upcoming", size: "small", gridSlot: 1 },
+        { id: makeId(), type: "recent-documents", size: "small", gridSlot: 2 },
+        { id: makeId(), type: "finance", size: "small", gridSlot: 3 },
       ],
     }],
   };

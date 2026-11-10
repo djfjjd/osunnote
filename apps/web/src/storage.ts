@@ -60,7 +60,10 @@ const normalizeHomeWorkspace = (home: HomeWorkspace | undefined, projects: Proje
     title: !page.parentId && !page.projectId && page.title === "나의 워크스페이스" ? fallbackProject.title : page.title,
     icon: typeof page.icon === "string" ? page.icon : "✦",
     blocks: Array.isArray(page.blocks) ? page.blocks : [],
-    widgets: Array.isArray(page.widgets) ? page.widgets : [],
+    widgets: Array.isArray(page.widgets) ? page.widgets.map((widget, index) => ({
+      ...widget,
+      gridSlot: typeof widget.gridSlot === "number" && widget.gridSlot >= 0 ? widget.gridSlot : index,
+    })) : [],
   }));
   const pages: HomePageData[] = [...migrated];
   projects.forEach((project) => {
