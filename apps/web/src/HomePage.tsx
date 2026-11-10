@@ -113,6 +113,17 @@ export function HomePage({ project, documents, home, todos, onChange, onTodosCha
     const [moved] = widgets.splice(from, 1); widgets.splice(to, 0, moved!); updatePage({ widgets }); setDraggedWidgetId(undefined);
   };
 
+  const moveWidgetToIndex = (targetIndex: number) => {
+    if (!draggedWidgetId) return;
+    const widgets = [...page.widgets];
+    const from = widgets.findIndex((item) => item.id === draggedWidgetId);
+    if (from < 0) return;
+    const [moved] = widgets.splice(from, 1);
+    widgets.splice(Math.min(targetIndex, widgets.length), 0, moved!);
+    updatePage({ widgets });
+    setDraggedWidgetId(undefined); setWidgetDropTargetId(undefined);
+  };
+
   const applyTemplate = (template: string) => {
     if (!template) return;
     if (page.blocks.some((block) => block.content.trim()) && !window.confirm("현재 페이지 내용을 템플릿으로 바꿀까요?")) return;
@@ -160,7 +171,7 @@ export function HomePage({ project, documents, home, todos, onChange, onTodosCha
       <button type="button" className="workspace-page-icon" onClick={() => { const icon = window.prompt("페이지 아이콘", page.icon); if (icon !== null) updatePage({ icon: icon.trim().slice(0, 2) || "◻" }); }}>{page.icon}</button>
       <input className="workspace-page-title" value={isProjectRoot ? project.title : page.title} onChange={(event) => isProjectRoot ? onProjectTitleChange(event.target.value) : updatePage({ title: event.target.value })} aria-label={isProjectRoot ? "프로젝트 이름" : "페이지 제목"} />
       <section className="workspace-blocks" aria-label="페이지 블록">{page.blocks.map((block) => <div className={`workspace-block type-${block.type}`} key={block.id} draggable onDragStart={() => setDraggedBlockId(block.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveBlock(block.id)}><div className="workspace-block-controls"><button type="button" aria-label="블록 이동"><GripVertical size={15} /></button><button type="button" onClick={() => addBlock("text", block.id)} aria-label="아래에 블록 추가"><Plus size={15} /></button></div><div className="workspace-block-content">{renderBlock(block)}{slashBlockId === block.id && <div className="slash-menu">{commands.filter((command) => !block.content.slice(1) || command.label.includes(block.content.slice(1))).map((command) => <button type="button" key={command.type} onClick={() => convertBlock(block.id, command.type)}><command.icon size={17} /><span><strong>{command.label}</strong><small>{command.description}</small></span></button>)}</div>}</div><button type="button" className="workspace-block-delete" onClick={() => updatePage({ blocks: page.blocks.filter((item) => item.id !== block.id) })} aria-label="블록 삭제"><Trash2 size={14} /></button></div>)}<button type="button" className="workspace-add-block" onClick={() => addBlock()}><Plus size={15} />블록 추가</button></section>
-      <section className="workspace-widget-section"><header><div><h2>대시보드</h2></div><div><button type="button" onClick={() => setWidgetMenuOpen((value) => !value)}><Plus size={14} />위젯 추가</button>{widgetMenuOpen && <div className="widget-add-menu">{(Object.keys(widgetLabels) as HomeWidgetType[]).map((type) => <button type="button" key={type} onClick={() => addWidget(type)} disabled={page.widgets.some((widget) => widget.type === type)}>{widgetLabels[type]}</button>)}</div>}</div></header><div className="workspace-widget-grid">{page.widgets.map(renderWidget)}</div></section>
+      <section className="workspace-widget-section"><header><div><h2>대시보드</h2></div><div><button type="button" onClick={() => setWidgetMenuOpen((value) => !value)}><Plus size={14} />위젯 추가</button>{widgetMenuOpen && <div className="widget-add-menu">{(Object.keys(widgetLabels) as HomeWidgetType[]).map((type) => <button type="button" key={type} onClick={() => addWidget(type)} disabled={page.widgets.some((widget) => widget.type === type)}>{widgetLabels[type]}</button>)}</div>}</div></header><div className={`workspace-widget-grid ${draggedWidgetId ? "is-dragging" : ""}`}>{page.widgets.map(renderWidget)}{Array.from({ length: Math.max(6, Math.ceil((page.widgets.length + 1) / 3) * 3) - page.widgets.length }, (_, index) => { const slotId = `empty-${index}`; return <div className={`workspace-widget-drop-slot ${widgetDropTargetId === slotId ? "active" : ""}`} key={slotId} onDragOver={(event) => { event.preventDefault(); setWidgetDropTargetId(slotId); }} onDragLeave={() => setWidgetDropTargetId(undefined)} onDrop={() => moveWidgetToIndex(page.widgets.length + index)}><span>여기에 놓기</span></div>; })}</div></section>
     </main>
   </section>;
 }

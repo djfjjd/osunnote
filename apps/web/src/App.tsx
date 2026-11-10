@@ -3,7 +3,7 @@ import {
   ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
   Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
   Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine,
-  RotateCcw, Search, Settings2, ShieldCheck, Sparkles, Sun, Trash2, WalletCards,
+  RotateCcw, Search, Settings2, ShieldCheck, Sun, Trash2, WalletCards,
   Wifi, WifiOff, X,
 } from "lucide-react";
 import {
@@ -747,7 +747,6 @@ export function App() {
           )}
         </section>
         <section className="inspector-section export-card">
-          <Sparkles size={19} /><div><strong>내 글은 내 것으로</strong><p>언제든 표준 형식으로 보관하세요.</p></div>
           <button onClick={() => download(`${document.title}.txt`, document.content)}><Download size={15} />{ko.export}</button>
         </section>
         </>}

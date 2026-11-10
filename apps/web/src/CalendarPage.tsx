@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { calendarMonth } from "@osunnote/domain";
 
 const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -50,7 +50,6 @@ export function CalendarPage() {
           );
         })}
       </div>
-      <footer className="calendar-source"><CalendarDays size={14} />대한민국 공휴일 · 2026년 우주항공청 월력요항 기준</footer>
     </section>
   );
 }
