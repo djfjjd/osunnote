@@ -95,8 +95,6 @@ export function App() {
       if (!(event.metaKey || event.ctrlKey)) return;
       if (event.key.toLocaleLowerCase() === "k") {
         event.preventDefault();
-        setLeftOpen(true);
-        setMobileMenu(true);
         window.setTimeout(() => searchRef.current?.focus(), 0);
       }
       if (event.key.toLocaleLowerCase() === "n" && event.altKey) {
@@ -206,7 +204,19 @@ export function App() {
 
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
   const selectProjectPage = (pageId: string) => {
-    updateHome({ ...workspace.home, activePageId: pageId });
+    const targetPage = workspace.home.pages.find((item) => item.id === pageId);
+    const targetProject = workspace.projects.find((item) => item.id === targetPage?.projectId);
+    if (!targetPage || !targetProject) return;
+    const targetDocument = targetProject.documents.find((item) => !item.deletedAt) ?? targetProject.documents[0];
+    setWorkspace((current) => ({ ...current, activeProjectId: targetProject.id, activeDocumentId: targetDocument?.id ?? "", home: { ...current.home, activePageId: pageId } }));
+    setView("home"); setProjectMenuOpen(false); setMobileMenu(false);
+  };
+  const selectProjectHome = (projectId: string) => {
+    const targetProject = workspace.projects.find((item) => item.id === projectId);
+    const root = workspace.home.pages.find((item) => item.projectId === projectId && !item.parentId);
+    if (!targetProject || !root) return;
+    const targetDocument = targetProject.documents.find((item) => !item.deletedAt) ?? targetProject.documents[0];
+    setWorkspace((current) => ({ ...current, activeProjectId: projectId, activeDocumentId: targetDocument?.id ?? "", home: { ...current.home, activePageId: root.id } }));
     setView("home"); setProjectMenuOpen(false); setMobileMenu(false);
   };
   const addProjectPage = () => {
@@ -217,14 +227,14 @@ export function App() {
     setView("home"); setProjectMenuOpen(false);
   };
   const deleteProjectPage = (pageId: string) => {
-    const target = projectHomePages.find((item) => item.id === pageId);
-    const projectRoot = projectHomePages.find((item) => !item.parentId);
+    const target = workspace.home.pages.find((item) => item.id === pageId);
+    const targetPages = workspace.home.pages.filter((item) => item.projectId === target?.projectId);
+    const projectRoot = targetPages.find((item) => !item.parentId);
     if (!target || target.id === projectRoot?.id || !window.confirm(`‘${target.title}’ 페이지와 하위 페이지를 삭제할까요?`)) return;
     const deleted = new Set([pageId]); let changed = true;
-    while (changed) { changed = false; projectHomePages.forEach((item) => { if (item.parentId && deleted.has(item.parentId) && !deleted.has(item.id)) { deleted.add(item.id); changed = true; } }); }
+    while (changed) { changed = false; targetPages.forEach((item) => { if (item.parentId && deleted.has(item.parentId) && !deleted.has(item.id)) { deleted.add(item.id); changed = true; } }); }
     const pages = workspace.home.pages.filter((item) => !deleted.has(item.id)).map((item) => ({ ...item, blocks: item.blocks.filter((block) => !block.linkedPageId || !deleted.has(block.linkedPageId)) }));
-    const root = pages.find((item) => item.projectId === project.id && !item.parentId)!;
-    updateHome({ ...workspace.home, pages, activePageId: root.id });
+    updateHome({ ...workspace.home, pages, activePageId: deleted.has(workspace.home.activePageId) ? projectRoot!.id : workspace.home.activePageId });
   };
   const renameActiveProject = (title: string) => setWorkspace((current) => ({
     ...current,
@@ -495,41 +505,31 @@ export function App() {
           </button>
           {projectMenuOpen && (
             <div className="project-menu">
-              <span className="project-menu-label">{ko.project.current}</span>
-              <div className="project-menu-title"><strong>{project.title}</strong><button type="button" onClick={() => editProject()} aria-label={ko.project.edit} title={ko.project.edit}><PencilLine size={14} /></button></div>
+              <div className="project-menu-title"><strong>{project.title}</strong><span>({liveDocuments.length}개 글 · {liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자)</span><button type="button" onClick={() => editProject()} aria-label={ko.project.edit} title={ko.project.edit}><PencilLine size={14} /></button></div>
               <p>{project.description || ko.project.noDescription}</p>
-              <div className="project-menu-stats"><span>{liveDocuments.length}개 글</span><span>{liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자</span></div>
-              <div className="project-menu-pages">
-                <header><span>프로젝트 페이지</span><button type="button" onClick={addProjectPage} aria-label="프로젝트 페이지 추가" title="페이지 추가"><FilePlus2 size={13} /></button></header>
-                <div>
-                  {projectHomePages.map((item) => (
-                    <div className={`project-menu-page-row ${workspace.home.activePageId === item.id && view === "home" ? "active" : ""}`} style={{ paddingLeft: `${7 + projectPageDepth(item, projectHomePages) * 13}px` }} key={item.id}>
-                      <button type="button" onClick={() => selectProjectPage(item.id)}><span>{item.icon}</span><strong>{item.parentId ? item.title : project.title}</strong></button>
-                      <button type="button" onClick={() => deleteProjectPage(item.id)} disabled={!item.parentId} aria-label={`${item.title} 페이지 삭제`} title={item.parentId ? "페이지 삭제" : "프로젝트 홈은 삭제할 수 없습니다"}><Trash2 size={12} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="project-menu-projects">
-                <span>{ko.project.all}</span>
+              <div className="project-menu-navigation">
+                <header><span>프로젝트 및 페이지</span><div><button type="button" onClick={addProjectPage} aria-label="현재 프로젝트에 페이지 추가" title="페이지 추가"><FilePlus2 size={13} /></button><button type="button" onClick={addProject} aria-label="프로젝트 추가" title="프로젝트 추가"><FolderPlus size={13} /></button></div></header>
                 <div>
                   {workspace.projects.map((item) => (
-                    <div className={`project-menu-project-row ${item.id === project.id ? "active" : ""}`} key={item.id}>
-                      <button type="button" className="project-menu-project-switch" onClick={() => selectProject(item.id)}>
-                        <strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small>
-                      </button>
-                      <button type="button" className="project-delete-button" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={14} /></button>
-                    </div>
+                    <section className="project-navigation-group" key={item.id}>
+                      <div className={`project-menu-project-row ${item.id === project.id ? "active" : ""}`}>
+                        <button type="button" className="project-menu-project-switch" onClick={() => selectProjectHome(item.id)}><strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button>
+                        <button type="button" className="project-delete-button" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={14} /></button>
+                      </div>
+                      {workspace.home.pages.filter((page) => page.projectId === item.id && page.parentId).map((page) => {
+                        const pages = workspace.home.pages.filter((entry) => entry.projectId === item.id);
+                        return <div className={`project-menu-page-row ${workspace.home.activePageId === page.id && view === "home" ? "active" : ""}`} style={{ paddingLeft: `${20 + projectPageDepth(page, pages) * 13}px` }} key={page.id}><button type="button" onClick={() => selectProjectPage(page.id)}><span>{page.icon}</span><strong>{page.title}</strong></button><button type="button" onClick={() => deleteProjectPage(page.id)} aria-label={`${page.title} 페이지 삭제`} title="페이지 삭제"><Trash2 size={12} /></button></div>;
+                      })}
+                    </section>
                   ))}
                 </div>
               </div>
-              <button className="project-add-button" onClick={addProject}><FilePlus2 size={14} />{ko.project.add}</button>
             </div>
           )}
         </div>
         <TopbarCalendar />
         <div className="topbar-actions">
-          <button className="text-button top-search-button" onClick={() => { setLeftOpen(true); setMobileMenu(true); window.setTimeout(() => searchRef.current?.focus(), 0); }}><Search size={15} />전체 검색<kbd>⌘K</kbd></button>
+          <div className="top-search-wrap"><div className="top-search-button"><Search size={15} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="전체 검색" aria-label="전체 검색" /><kbd>⌘K</kbd></div>{query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}</div>
           <button className="text-button quick-create-button" onClick={addDocument}><FilePlus2 size={16} />빠른 생성</button>
           <div className={`save-state ${saveState}`}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
@@ -547,8 +547,6 @@ export function App() {
 
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="sidebar-mobile-head"><button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span>{ko.appName}</button><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
-        <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="전체 검색" aria-label="전체 검색" /><kbd>⌘K</kbd></div>
-        {query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation module-navigation" aria-label="모듈 탐색">
           <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />메모, 글쓰기</button>
