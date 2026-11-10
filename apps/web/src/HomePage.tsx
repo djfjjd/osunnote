@@ -8,17 +8,20 @@ import {
   countCharacters, makeId,
   type DatabaseView, type HomeBlock, type HomeBlockType, type HomePageData,
   type HomeWidget, type HomeWidgetSize, type HomeWidgetType, type HomeWorkspace,
-  type Project, type WritingDocument,
+  type Project, type TodoItem, type WritingDocument,
 } from "@osunnote/domain";
 
 interface HomePageProps {
   project: Project;
   documents: WritingDocument[];
   home: HomeWorkspace;
+  todos: TodoItem[];
   onChange: (home: HomeWorkspace) => void;
+  onTodosChange: (todos: TodoItem[]) => void;
   onProjectTitleChange: (title: string) => void;
   onOpenDocument: (id: string) => void;
   onOpenCalendar: () => void;
+  onOpenTodo: () => void;
 }
 
 const commands: Array<{ type: HomeBlockType; label: string; description: string; icon: typeof Type }> = [
@@ -41,13 +44,14 @@ const createBlock = (type: HomeBlockType): HomeBlock => ({
   ...(type === "database" ? { databaseView: "list" as DatabaseView } : {}),
 });
 
-export function HomePage({ project, documents, home, onChange, onProjectTitleChange, onOpenDocument, onOpenCalendar }: HomePageProps) {
+export function HomePage({ project, documents, home, todos, onChange, onTodosChange, onProjectTitleChange, onOpenDocument, onOpenCalendar, onOpenTodo }: HomePageProps) {
   const projectPages = home.pages.filter((item) => item.projectId === project.id);
   const page = projectPages.find((item) => item.id === home.activePageId) ?? projectPages.find((item) => !item.parentId) ?? projectPages[0]!;
   const isProjectRoot = !page.parentId;
   const [slashBlockId, setSlashBlockId] = useState<string>();
   const [draggedBlockId, setDraggedBlockId] = useState<string>();
   const [draggedWidgetId, setDraggedWidgetId] = useState<string>();
+  const [widgetDropTargetId, setWidgetDropTargetId] = useState<string>();
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const recent = useMemo(() => [...documents].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 4), [documents]);
@@ -100,7 +104,7 @@ export function HomePage({ project, documents, home, onChange, onProjectTitleCha
 
   const addWidget = (type: HomeWidgetType) => {
     if (page.widgets.some((widget) => widget.type === type)) return;
-    updatePage({ widgets: [...page.widgets, { id: makeId(), type, size: type === "recent-documents" ? "medium" : "small" }] }); setWidgetMenuOpen(false);
+    updatePage({ widgets: [...page.widgets, { id: makeId(), type, size: "small" }] }); setWidgetMenuOpen(false);
   };
   const moveWidget = (targetId: string) => {
     if (!draggedWidgetId || draggedWidgetId === targetId) return;
@@ -144,8 +148,9 @@ export function HomePage({ project, documents, home, onChange, onProjectTitleCha
   };
 
   const renderWidget = (widget: HomeWidget) => {
-    const unavailable = widget.type === "tasks" || widget.type === "finance";
-    return <article className={`workspace-widget size-${widget.size}`} key={widget.id} draggable onDragStart={() => setDraggedWidgetId(widget.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveWidget(widget.id)}><header><GripVertical size={14} /><strong>{widgetLabels[widget.type]}</strong>{unavailable && <span>준비 중</span>}<button type="button" title="크기 변경" onClick={() => updatePage({ widgets: page.widgets.map((item) => item.id === widget.id ? { ...item, size: nextWidgetSize[item.size] } : item) })}><Rows3 size={14} /></button><button type="button" title="위젯 삭제" onClick={() => updatePage({ widgets: page.widgets.filter((item) => item.id !== widget.id) })}><X size={14} /></button></header>{widget.type === "recent-documents" && (recent.length > 0 ? <div className="widget-document-list">{recent.map((document) => <button type="button" key={document.id} onClick={() => onOpenDocument(document.id)}><FileText size={14} /><span><strong>{document.title}</strong><small>{document.folder} · {countCharacters(document.content).toLocaleString()}자</small></span><ArrowRight size={13} /></button>)}</div> : <p>최근 작성한 글이 없습니다.</p>)}{widget.type === "upcoming" && <div className="widget-empty"><CalendarDays size={20} /><p>등록된 일정이 없습니다.</p><button type="button" onClick={onOpenCalendar}>캘린더 열기</button></div>}{widget.type === "tasks" && <div className="widget-empty"><ListChecks size={20} /><p>할 일 모듈 연결 후 오늘의 작업이 표시됩니다.</p></div>}{widget.type === "finance" && <div className="widget-empty"><WalletCards size={20} /><p>가계부 모듈 연결 후 이번 달 요약이 표시됩니다.</p></div>}</article>;
+    const unavailable = widget.type === "finance";
+    const openTodos = todos.filter((todo) => !todo.completed).slice(0, 4);
+    return <article className={`workspace-widget size-${widget.size} ${widgetDropTargetId === widget.id ? "drop-target" : ""}`} key={widget.id} draggable onDragStart={() => setDraggedWidgetId(widget.id)} onDragEnd={() => { setDraggedWidgetId(undefined); setWidgetDropTargetId(undefined); }} onDragOver={(event) => { event.preventDefault(); if (draggedWidgetId && draggedWidgetId !== widget.id) setWidgetDropTargetId(widget.id); }} onDragLeave={() => setWidgetDropTargetId(undefined)} onDrop={() => { moveWidget(widget.id); setWidgetDropTargetId(undefined); }}><header><GripVertical size={14} /><strong>{widgetLabels[widget.type]}</strong>{unavailable && <span>준비 중</span>}<button type="button" title="크기 변경" onClick={() => updatePage({ widgets: page.widgets.map((item) => item.id === widget.id ? { ...item, size: nextWidgetSize[item.size] } : item) })}><Rows3 size={14} /></button><button type="button" title="위젯 삭제" onClick={() => updatePage({ widgets: page.widgets.filter((item) => item.id !== widget.id) })}><X size={14} /></button></header>{widget.type === "recent-documents" && (recent.length > 0 ? <div className="widget-document-list">{recent.map((document) => <button type="button" key={document.id} onClick={() => onOpenDocument(document.id)}><FileText size={14} /><span><strong>{document.title}</strong><small>{document.folder} · {countCharacters(document.content).toLocaleString()}자</small></span><ArrowRight size={13} /></button>)}</div> : <p>최근 작성한 글이 없습니다.</p>)}{widget.type === "upcoming" && <div className="widget-empty"><CalendarDays size={20} /><p>등록된 일정이 없습니다.</p><button type="button" onClick={onOpenCalendar}>캘린더 열기</button></div>}{widget.type === "tasks" && (openTodos.length > 0 ? <div className="widget-todo-list">{openTodos.map((todo) => <label key={todo.id}><input type="checkbox" checked={todo.completed} onChange={() => onTodosChange(todos.map((item) => item.id === todo.id ? { ...item, completed: true, updatedAt: Date.now() } : item))} /><span>{todo.title}</span></label>)}<button type="button" onClick={onOpenTodo}>전체 보기</button></div> : <div className="widget-empty"><ListChecks size={20} /><p>오늘 할 일이 없습니다.</p><button type="button" onClick={onOpenTodo}>할 일 추가</button></div>)}{widget.type === "finance" && <div className="widget-empty"><WalletCards size={20} /><p>가계부 모듈 연결 후 이번 달 요약이 표시됩니다.</p></div>}</article>;
   };
 
   return <section className="workspace-home">

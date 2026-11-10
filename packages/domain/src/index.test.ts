@@ -30,6 +30,7 @@ describe("writing domain", () => {
     expect(home.pages[0]!.blocks[0]).toMatchObject({ type: "text", content: "" });
     expect(home.pages[0]!.widgets.map((widget) => widget.type)).toEqual(["tasks", "upcoming", "recent-documents", "finance"]);
     expect(initialWorkspace().home.activePageId).toBeTruthy();
+    expect(initialWorkspace().todos).toEqual([]);
   });
 });
 

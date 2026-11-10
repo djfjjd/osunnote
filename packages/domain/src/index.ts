@@ -71,12 +71,21 @@ export interface HomeWorkspace {
   theme: "light" | "dark";
 }
 
+export interface TodoItem {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Workspace {
   revision: number;
   projects: Project[];
   activeProjectId: string;
   activeDocumentId: string;
   home: HomeWorkspace;
+  todos: TodoItem[];
 }
 
 export const countCharacters = (text: string): number =>
@@ -110,7 +119,7 @@ export const createHomeWorkspace = (projectId?: string, projectTitle = "나의 �
       widgets: [
         { id: makeId(), type: "tasks", size: "small" },
         { id: makeId(), type: "upcoming", size: "small" },
-        { id: makeId(), type: "recent-documents", size: "medium" },
+        { id: makeId(), type: "recent-documents", size: "small" },
         { id: makeId(), type: "finance", size: "small" },
       ],
     }],
@@ -136,7 +145,7 @@ export const initialWorkspace = (): Workspace => {
     folders: ["원고", "자료"],
     documents: [opening, characters],
   };
-  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace(project.id, project.title) };
+  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace(project.id, project.title), todos: [] };
 };
 
 export const saveDocument = (

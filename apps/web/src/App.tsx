@@ -16,6 +16,7 @@ import { CalendarPage } from "./CalendarPage";
 import { TopbarCalendar } from "./TopbarCalendar";
 import { HomePage } from "./HomePage";
 import { DocumentListPage } from "./DocumentListPage";
+import { TodoPage } from "./TodoPage";
 
 const statusLabel: Record<DocumentStatus, string> = { idea: "아이디어", draft: "초고", review: "다듬는 중", done: "완료" };
 const statusTone: Record<DocumentStatus, string> = { idea: "blue", draft: "amber", review: "violet", done: "green" };
@@ -66,7 +67,7 @@ export function App() {
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [storageError, setStorageError] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [view, setView] = useState<"home" | "library" | "documents" | "calendar" | "trash">("home");
+  const [view, setView] = useState<"home" | "library" | "documents" | "todo" | "calendar" | "trash">("home");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [projectManagerOpen, setProjectManagerOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string>();
@@ -203,6 +204,7 @@ export function App() {
   };
 
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
+  const updateTodos = (todos: Workspace["todos"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, todos }));
   const selectProjectPage = (pageId: string) => {
     const targetPage = workspace.home.pages.find((item) => item.id === pageId);
     const targetProject = workspace.projects.find((item) => item.id === targetPage?.projectId);
@@ -516,6 +518,9 @@ export function App() {
                         <button type="button" className="project-menu-project-switch" onClick={() => selectProjectHome(item.id)}><strong>{item.title}</strong><small>{item.documents.filter((entry) => !entry.deletedAt).length}개 글</small></button>
                         <button type="button" className="project-delete-button" onClick={() => deleteProject(item.id)} disabled={workspace.projects.length <= 1} aria-label={`${item.title} 프로젝트 삭제`} title={workspace.projects.length <= 1 ? "마지막 프로젝트는 삭제할 수 없습니다" : "프로젝트 삭제"}><Trash2 size={14} /></button>
                       </div>
+                      <div className="project-menu-documents">
+                        {item.documents.filter((document) => !document.deletedAt).map((document) => <button type="button" key={document.id} onClick={() => openGlobalDocument(item.id, document.id)}><span>ㄴ</span><strong>{document.title || "제목 없는 글"}</strong></button>)}
+                      </div>
                       {workspace.home.pages.filter((page) => page.projectId === item.id && page.parentId).map((page) => {
                         const pages = workspace.home.pages.filter((entry) => entry.projectId === item.id);
                         return <div className={`project-menu-page-row ${workspace.home.activePageId === page.id && view === "home" ? "active" : ""}`} style={{ paddingLeft: `${20 + projectPageDepth(page, pages) * 13}px` }} key={page.id}><button type="button" onClick={() => selectProjectPage(page.id)}><span>{page.icon}</span><strong>{page.title}</strong></button><button type="button" onClick={() => deleteProjectPage(page.id)} aria-label={`${page.title} 페이지 삭제`} title="페이지 삭제"><Trash2 size={12} /></button></div>;
@@ -551,7 +556,7 @@ export function App() {
         <nav className="navigation module-navigation" aria-label="모듈 탐색">
           <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />메모, 글쓰기</button>
           <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><Files size={17} />문서<span>{liveDocuments.length}</span></button>
-          <button className="nav-item" disabled><ListTodo size={17} />To Do List<span className="coming-soon">준비 중</span></button>
+          <button className={`nav-item ${view === "todo" ? "active" : ""}`} onClick={() => { setView("todo"); setMobileMenu(false); }}><ListTodo size={17} />To Do List<span>{workspace.todos.filter((todo) => !todo.completed).length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
           <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
         </nav>
@@ -650,14 +655,17 @@ export function App() {
             project={project}
             documents={liveDocuments}
             home={workspace.home}
+            todos={workspace.todos}
             onChange={updateHome}
+            onTodosChange={updateTodos}
             onProjectTitleChange={renameActiveProject}
             onOpenDocument={selectDocument}
             onOpenCalendar={() => setView("calendar")}
+            onOpenTodo={() => setView("todo")}
           />
         ) : view === "library" ? (
           <DocumentListPage documents={liveDocuments} onOpenDocument={selectDocument} onNewDocument={addDocument} />
-        ) : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
+        ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
           <section className="trash-page">
             <header>
               <div><h1>휴지통</h1></div>

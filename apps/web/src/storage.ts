@@ -43,7 +43,12 @@ const normalizeWorkspace = (workspace: Workspace): Workspace => {
     const folders = [...new Set([...storedFolders, ...project.documents.map((document) => document.folder)])];
     return { ...project, folders };
   });
-  return { ...workspace, projects, home: normalizeHomeWorkspace(workspace.home, projects, workspace.activeProjectId) };
+  return {
+    ...workspace,
+    projects,
+    home: normalizeHomeWorkspace(workspace.home, projects, workspace.activeProjectId),
+    todos: Array.isArray(workspace.todos) ? workspace.todos : [],
+  };
 };
 
 const normalizeHomeWorkspace = (home: HomeWorkspace | undefined, projects: Project[], activeProjectId: string): HomeWorkspace => {
