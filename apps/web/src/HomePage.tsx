@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight, CalendarDays, CheckSquare, ChevronRight, Columns3, FileText, GripVertical,
   Heading2, Image, LayoutDashboard, List, ListChecks, Minus, Plus, Rows3, Table2, Trash2,
@@ -54,7 +54,17 @@ export function HomePage({ project, documents, home, todos, onChange, onTodosCha
   const [widgetDropTargetId, setWidgetDropTargetId] = useState<string>();
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const widgetMenuRef = useRef<HTMLDivElement>(null);
   const recent = useMemo(() => [...documents].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 4), [documents]);
+
+  useEffect(() => {
+    if (!widgetMenuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!widgetMenuRef.current?.contains(event.target as Node)) setWidgetMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [widgetMenuOpen]);
 
   const updatePage = (patch: Partial<HomePageData>) => {
     const now = Date.now();
@@ -175,7 +185,7 @@ export function HomePage({ project, documents, home, todos, onChange, onTodosCha
       <button type="button" className="workspace-page-icon" onClick={() => { const icon = window.prompt("페이지 아이콘", page.icon); if (icon !== null) updatePage({ icon: icon.trim().slice(0, 2) || "◻" }); }}>{page.icon}</button>
       <input className="workspace-page-title" value={isProjectRoot ? project.title : page.title} onChange={(event) => isProjectRoot ? onProjectTitleChange(event.target.value) : updatePage({ title: event.target.value })} aria-label={isProjectRoot ? "프로젝트 이름" : "페이지 제목"} />
       <section className="workspace-blocks" aria-label="페이지 블록">{page.blocks.map((block) => <div className={`workspace-block type-${block.type}`} key={block.id} draggable onDragStart={() => setDraggedBlockId(block.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveBlock(block.id)}><div className="workspace-block-controls"><button type="button" aria-label="블록 이동"><GripVertical size={15} /></button><button type="button" onClick={() => addBlock("text", block.id)} aria-label="아래에 블록 추가"><Plus size={15} /></button></div><div className="workspace-block-content">{renderBlock(block)}{slashBlockId === block.id && <div className="slash-menu">{commands.filter((command) => !block.content.slice(1) || command.label.includes(block.content.slice(1))).map((command) => <button type="button" key={command.type} onClick={() => convertBlock(block.id, command.type)}><command.icon size={17} /><span><strong>{command.label}</strong><small>{command.description}</small></span></button>)}</div>}</div><button type="button" className="workspace-block-delete" onClick={() => updatePage({ blocks: page.blocks.filter((item) => item.id !== block.id) })} aria-label="블록 삭제"><Trash2 size={14} /></button></div>)}<button type="button" className="workspace-add-block" onClick={() => addBlock()}><Plus size={15} />블록 추가</button></section>
-      <section className="workspace-widget-section"><header><div><h2>대시보드</h2></div><div><button type="button" onClick={() => setWidgetMenuOpen((value) => !value)}><Plus size={14} />위젯 추가</button>{widgetMenuOpen && <div className="widget-add-menu">{(Object.keys(widgetLabels) as HomeWidgetType[]).map((type) => <button type="button" key={type} onClick={() => addWidget(type)} disabled={page.widgets.some((widget) => widget.type === type)}>{widgetLabels[type]}</button>)}</div>}</div></header><div className={`workspace-widget-grid ${draggedWidgetId ? "is-dragging" : ""}`}>{page.widgets.map(renderWidget)}{Array.from({ length: Math.max(6, Math.ceil(((Math.max(-1, ...page.widgets.map((widget, index) => widget.gridSlot ?? index)) + 2) / 3)) * 3) }, (_, gridSlot) => page.widgets.some((widget, index) => (widget.gridSlot ?? index) === gridSlot) ? null : <div style={{ gridColumnStart: gridSlot % 3 + 1, gridRowStart: Math.floor(gridSlot / 3) + 1 }} className={`workspace-widget-drop-slot ${widgetDropTargetId === `empty-${gridSlot}` ? "active" : ""}`} key={gridSlot} onDragOver={(event) => { event.preventDefault(); setWidgetDropTargetId(`empty-${gridSlot}`); }} onDragLeave={() => setWidgetDropTargetId(undefined)} onDrop={() => moveWidgetToSlot(gridSlot)}><span>여기에 놓기</span></div>)}</div></section>
+      <section className="workspace-widget-section"><header><div><h2>대시보드</h2></div><div ref={widgetMenuRef}><button type="button" onClick={() => setWidgetMenuOpen((value) => !value)}><Plus size={14} />위젯 추가</button>{widgetMenuOpen && <div className="widget-add-menu">{(Object.keys(widgetLabels) as HomeWidgetType[]).map((type) => <button type="button" key={type} onClick={() => addWidget(type)} disabled={page.widgets.some((widget) => widget.type === type)}>{widgetLabels[type]}</button>)}</div>}</div></header><div className={`workspace-widget-grid ${draggedWidgetId ? "is-dragging" : ""}`}>{page.widgets.map(renderWidget)}{Array.from({ length: Math.max(6, Math.ceil(((Math.max(-1, ...page.widgets.map((widget, index) => widget.gridSlot ?? index)) + 2) / 3)) * 3) }, (_, gridSlot) => page.widgets.some((widget, index) => (widget.gridSlot ?? index) === gridSlot) ? null : <div style={{ gridColumnStart: gridSlot % 3 + 1, gridRowStart: Math.floor(gridSlot / 3) + 1 }} className={`workspace-widget-drop-slot ${widgetDropTargetId === `empty-${gridSlot}` ? "active" : ""}`} key={gridSlot} onDragOver={(event) => { event.preventDefault(); setWidgetDropTargetId(`empty-${gridSlot}`); }} onDragLeave={() => setWidgetDropTargetId(undefined)} onDrop={() => moveWidgetToSlot(gridSlot)}><span>여기에 놓기</span></div>)}</div></section>
     </main>
   </section>;
 }
