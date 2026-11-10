@@ -455,8 +455,8 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .workspace-widget-section>header h2 { margin:5px 0 0; font-family:"Iowan Old Style","AppleMyungjo",serif; font-size:25px; }
 .workspace-widget-section>header>div:last-child { position:relative; }
 .workspace-widget-section>header>div:last-child>button { height:35px; display:flex; align-items:center; gap:5px; padding:0 11px; border:1px solid #d7d5cc; border-radius:7px; background:#fff; font-size:12px; font-weight:600; }
-.widget-add-menu { position:absolute; z-index:15; top:36px; right:0; width:150px; padding:6px; border:1px solid #d8d5cc; border-radius:8px; background:#fff; box-shadow:0 12px 25px #252b2525; }
-.widget-add-menu button { width:100%; height:31px; padding:0 8px; border:0; border-radius:5px; background:transparent; font-size:9px; text-align:left; }
+.widget-add-menu { position:absolute; z-index:15; top:36px; right:0; width:170px; padding:6px; border:1px solid #d8d5cc; border-radius:8px; background:#fff; box-shadow:0 12px 25px #252b2525; }
+.widget-add-menu button { width:100%; height:36px; padding:0 10px; border:0; border-radius:5px; background:transparent; color:#343a35; font-size:13px; font-weight:700; text-align:left; }
 .widget-add-menu button:hover { background:#efede7; }.widget-add-menu button:disabled { opacity:.4; }
 .workspace-widget-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:minmax(150px,auto); gap:10px; }
 .workspace-widget-drop-slot { min-width:0; min-height:150px; display:none; place-items:center; border:2px dashed #7e9a84; border-radius:11px; background:#eaf2e9; color:#58705e; }
