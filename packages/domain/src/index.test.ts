@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  calendarMonth, countCharacters, createDocument, initialWorkspace, koreanHoliday,
+  calendarMonth, countCharacters, createDocument, createHomeWorkspace, initialWorkspace, koreanHoliday,
   saveDocument, searchDocuments,
 } from "./index";
 
@@ -22,6 +22,14 @@ describe("writing domain", () => {
     const document = { ...createDocument("첫 장"), tags: ["미스터리"], content: "밤의 기차" };
     expect(searchDocuments([document], "미스터리")).toHaveLength(1);
     expect(searchDocuments([document], "낮")).toHaveLength(0);
+  });
+
+  it("creates a persistent editable home workspace", () => {
+    const home = createHomeWorkspace();
+    expect(home.pages).toHaveLength(1);
+    expect(home.pages[0]!.blocks[0]).toMatchObject({ type: "text", content: "" });
+    expect(home.pages[0]!.widgets.map((widget) => widget.type)).toEqual(["tasks", "upcoming", "recent-documents", "finance"]);
+    expect(initialWorkspace().home.activePageId).toBeTruthy();
   });
 });
 

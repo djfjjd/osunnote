@@ -29,11 +29,53 @@ export interface Project {
   createdAt: number;
 }
 
+export type HomeBlockType = "text" | "heading" | "checklist" | "table" | "image" | "divider" | "subpage" | "database";
+export type DatabaseView = "list" | "board" | "table" | "calendar";
+
+export interface HomeBlock {
+  id: string;
+  type: HomeBlockType;
+  content: string;
+  checked?: boolean;
+  rows?: string[][];
+  imageData?: string;
+  linkedPageId?: string;
+  databaseView?: DatabaseView;
+}
+
+export type HomeWidgetType = "tasks" | "upcoming" | "recent-documents" | "finance";
+export type HomeWidgetSize = "small" | "medium" | "wide";
+
+export interface HomeWidget {
+  id: string;
+  type: HomeWidgetType;
+  size: HomeWidgetSize;
+}
+
+export interface HomePageData {
+  id: string;
+  title: string;
+  icon: string;
+  cover?: string;
+  parentId?: string;
+  blocks: HomeBlock[];
+  widgets: HomeWidget[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HomeWorkspace {
+  activePageId: string;
+  pages: HomePageData[];
+  theme: "light" | "dark";
+}
+
 export interface Workspace {
   revision: number;
   projects: Project[];
   activeProjectId: string;
   activeDocumentId: string;
+  home: HomeWorkspace;
 }
 
 export const countCharacters = (text: string): number =>
@@ -47,6 +89,29 @@ export const createDocument = (title = "제목 없는 글", folder = "원고"): 
   return {
     id: makeId(), title, content: "", folder, status: "draft", tags: [], goal: 2000,
     createdAt: now, updatedAt: now, versions: [],
+  };
+};
+
+export const createHomeWorkspace = (): HomeWorkspace => {
+  const now = Date.now();
+  const pageId = makeId();
+  return {
+    activePageId: pageId,
+    theme: "light",
+    pages: [{
+      id: pageId,
+      title: "나의 워크스페이스",
+      icon: "✦",
+      createdAt: now,
+      updatedAt: now,
+      blocks: [{ id: makeId(), type: "text", content: "" }],
+      widgets: [
+        { id: makeId(), type: "tasks", size: "small" },
+        { id: makeId(), type: "upcoming", size: "small" },
+        { id: makeId(), type: "recent-documents", size: "medium" },
+        { id: makeId(), type: "finance", size: "small" },
+      ],
+    }],
   };
 };
 
@@ -69,7 +134,7 @@ export const initialWorkspace = (): Workspace => {
     folders: ["원고", "자료"],
     documents: [opening, characters],
   };
-  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id };
+  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace() };
 };
 
 export const saveDocument = (

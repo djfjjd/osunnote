@@ -1,4 +1,4 @@
-import type { Workspace } from "@osunnote/domain";
+import { createHomeWorkspace, type HomeWorkspace, type Workspace } from "@osunnote/domain";
 
 const DB_NAME = "osunnote-local";
 const STORE_NAME = "workspace";
@@ -39,12 +39,29 @@ const isWorkspace = (value: unknown): value is Workspace => {
 
 const normalizeWorkspace = (workspace: Workspace): Workspace => ({
   ...workspace,
+  home: normalizeHomeWorkspace(workspace.home),
   projects: workspace.projects.map((project) => {
     const storedFolders = Array.isArray(project.folders) ? project.folders.filter((folder): folder is string => typeof folder === "string") : [];
     const folders = [...new Set([...storedFolders, ...project.documents.map((document) => document.folder)])];
     return { ...project, folders };
   }),
 });
+
+const normalizeHomeWorkspace = (home: HomeWorkspace | undefined): HomeWorkspace => {
+  if (!home || !Array.isArray(home.pages) || home.pages.length === 0) return createHomeWorkspace();
+  const pages = home.pages.filter((page) => page && typeof page.id === "string" && typeof page.title === "string").map((page) => ({
+    ...page,
+    icon: typeof page.icon === "string" ? page.icon : "✦",
+    blocks: Array.isArray(page.blocks) ? page.blocks : [],
+    widgets: Array.isArray(page.widgets) ? page.widgets : [],
+  }));
+  if (pages.length === 0) return createHomeWorkspace();
+  return {
+    pages,
+    activePageId: pages.some((page) => page.id === home.activePageId) ? home.activePageId : pages[0]!.id,
+    theme: home.theme === "dark" ? "dark" : "light",
+  };
+};
 
 const openDatabase = (): Promise<IDBDatabase> => {
   databasePromise ??= new Promise((resolve, reject) => {

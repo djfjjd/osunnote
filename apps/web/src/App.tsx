@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Clock3, Download, FilePlus2,
-  Folder, FolderPlus, Focus, Hash, HelpCircle, House, Keyboard, Menu, MoreHorizontal, PanelLeftClose,
-  PanelRightClose, PencilLine, RotateCcw, Search, Settings2, ShieldCheck, Sparkles,
-  Trash2, Wifi, WifiOff, X,
+  ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
+  Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
+  Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine, PenTool,
+  RotateCcw, Search, Settings2, ShieldCheck, Sparkles, StickyNote, Sun, Trash2, WalletCards,
+  Wifi, WifiOff, X,
 } from "lucide-react";
 import {
   countCharacters, createDocument, initialWorkspace, saveDocument, searchDocuments,
@@ -168,6 +169,8 @@ export function App() {
   const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
   const folders = folderHierarchy([...(project.folders ?? []), ...filtered.map((item) => item.folder)]);
+  const matchingPages = query.trim() ? workspace.home.pages.filter((item) => item.title.toLocaleLowerCase("ko-KR").includes(query.trim().toLocaleLowerCase("ko-KR"))).slice(0, 4) : [];
+  const matchingDocuments = query.trim() ? workspace.projects.flatMap((item) => item.documents.filter((entry) => !entry.deletedAt && [entry.title, entry.content, entry.folder, ...entry.tags].join(" ").toLocaleLowerCase("ko-KR").includes(query.trim().toLocaleLowerCase("ko-KR"))).map((entry) => ({ projectId: item.id, document: entry }))).slice(0, 6) : [];
   const selectedFolderPath = folders.includes(selectedFolder) ? selectedFolder : document?.folder ?? folders[0] ?? "원고";
   const characters = countCharacters(document?.content ?? "");
   const progress = document ? Math.min(100, Math.round((characters / Math.max(document.goal, 1)) * 100)) : 0;
@@ -179,6 +182,17 @@ export function App() {
     setView("documents");
     setMobileMenu(false);
   };
+
+  const openGlobalDocument = (projectId: string, documentId: string) => {
+    const targetProject = workspace.projects.find((item) => item.id === projectId);
+    const targetDocument = targetProject?.documents.find((item) => item.id === documentId);
+    if (!targetProject || !targetDocument) return;
+    setWorkspace((current) => ({ ...current, activeProjectId: projectId, activeDocumentId: documentId }));
+    setSelectedFolder(targetDocument.folder);
+    setQuery(""); setView("documents"); setMobileMenu(false);
+  };
+
+  const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
 
   const updateDocument = (patch: Partial<WritingDocument>, snapshot = false) => {
     if (!document) return;
@@ -423,7 +437,7 @@ export function App() {
   );
 
   return (
-    <div className={`app ${focus ? "is-focus" : ""}`}>
+    <div className={`app ${focus ? "is-focus" : ""} ${workspace.home.theme === "dark" ? "theme-dark" : ""}`}>
       <header className="topbar">
         <button className="icon-button mobile-only" aria-label="메뉴 열기" onClick={() => setMobileMenu(true)}><Menu /></button>
         <button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span><span>{ko.appName}</span></button>
@@ -456,6 +470,8 @@ export function App() {
         </div>
         <TopbarCalendar />
         <div className="topbar-actions">
+          <button className="text-button top-search-button" onClick={() => { setLeftOpen(true); setMobileMenu(true); window.setTimeout(() => searchRef.current?.focus(), 0); }}><Search size={15} />전체 검색<kbd>⌘K</kbd></button>
+          <button className="text-button quick-create-button" onClick={addDocument}><FilePlus2 size={16} />빠른 생성</button>
           <div className={`save-state ${saveState}`}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
             <span>{saveState === "saving" ? "저장 중" : saveState === "error" ? "저장 실패" : ko.saved}</span>
@@ -464,6 +480,7 @@ export function App() {
             {online ? <Wifi size={17} /> : <WifiOff size={17} />}
           </button>
           <button className="text-button help-button" onClick={() => setShowWelcome(true)}><HelpCircle size={17} />도움말</button>
+          <button className="icon-button" onClick={() => updateHome({ ...workspace.home, theme: workspace.home.theme === "dark" ? "light" : "dark" })} aria-label={workspace.home.theme === "dark" ? "라이트 모드" : "다크 모드"} title={workspace.home.theme === "dark" ? "라이트 모드" : "다크 모드"}>{workspace.home.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}</button>
           <button className="text-button focus-button" onClick={() => setFocus((value) => !value)} title="집중 모드 (⌘ Enter)" aria-keyshortcuts="Meta+Enter Control+Enter"><Focus size={17} />{focus ? "나가기" : ko.focus}<kbd>⌘ Enter</kbd></button>
           <button className="avatar" aria-label="계정 메뉴">윤</button>
         </div>
@@ -471,14 +488,22 @@ export function App() {
 
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="sidebar-mobile-head"><button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span>{ko.appName}</button><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
-        <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko.search} aria-label={ko.search} /><kbd>⌘K</kbd></div>
+        <div className="search-box"><Search size={16} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="전체 검색" aria-label="전체 검색" /><kbd>⌘K</kbd></div>
+        {query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
-        <nav className="navigation" aria-label="문서 탐색">
-          <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />{ko.newDocument}<span className="shortcut-label">⌘⌥N</span></button>
-          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><BookOpen size={17} />{ko.allDocuments}<span>{liveDocuments.length}</span></button>
-          <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />{ko.calendar}</button>
-          <button className="nav-item"><Clock3 size={17} />최근 작업</button>
-          <button className="nav-item"><Hash size={17} />태그</button>
+        <nav className="navigation module-navigation" aria-label="모듈 탐색">
+          <button className="nav-item" disabled><StickyNote size={17} />메모<span className="coming-soon">준비 중</span></button>
+          <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />글쓰기</button>
+          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><Files size={17} />문서<span>{liveDocuments.length}</span></button>
+          <button className="nav-item" disabled><PenTool size={17} />필기<span className="coming-soon">준비 중</span></button>
+          <button className="nav-item" disabled><ListTodo size={17} />할 일<span className="coming-soon">준비 중</span></button>
+          <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
+          <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
+          <button className="nav-item" onClick={() => { setView("home"); setMobileMenu(false); }}><LayoutGrid size={17} />워크스페이스</button>
+        </nav>
+        <nav className="navigation writing-actions" aria-label="글쓰기 빠른 작업">
+          <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />새 글<span className="shortcut-label">⌘⌥N</span></button>
+          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><BookOpen size={17} />모든 글<span>{liveDocuments.length}</span></button>
         </nav>
         <div className="tree-label">
           <span>프로젝트</span>
@@ -570,7 +595,8 @@ export function App() {
           <HomePage
             project={project}
             documents={liveDocuments}
-            onNewDocument={addDocument}
+            home={workspace.home}
+            onChange={updateHome}
             onOpenDocument={selectDocument}
             onOpenCalendar={() => setView("calendar")}
           />
