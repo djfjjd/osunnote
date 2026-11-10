@@ -1,4 +1,4 @@
-import { createHomeWorkspace, type HomeWorkspace, type Workspace } from "@osunnote/domain";
+import { createHomeWorkspace, type HomePageData, type HomeWorkspace, type Project, type Workspace } from "@osunnote/domain";
 
 const DB_NAME = "osunnote-local";
 const STORE_NAME = "workspace";
@@ -37,29 +37,37 @@ const isWorkspace = (value: unknown): value is Workspace => {
   );
 };
 
-const normalizeWorkspace = (workspace: Workspace): Workspace => ({
-  ...workspace,
-  home: normalizeHomeWorkspace(workspace.home),
-  projects: workspace.projects.map((project) => {
+const normalizeWorkspace = (workspace: Workspace): Workspace => {
+  const projects = workspace.projects.map((project) => {
     const storedFolders = Array.isArray(project.folders) ? project.folders.filter((folder): folder is string => typeof folder === "string") : [];
     const folders = [...new Set([...storedFolders, ...project.documents.map((document) => document.folder)])];
     return { ...project, folders };
-  }),
-});
+  });
+  return { ...workspace, projects, home: normalizeHomeWorkspace(workspace.home, projects, workspace.activeProjectId) };
+};
 
-const normalizeHomeWorkspace = (home: HomeWorkspace | undefined): HomeWorkspace => {
-  if (!home || !Array.isArray(home.pages) || home.pages.length === 0) return createHomeWorkspace();
-  const pages = home.pages.filter((page) => page && typeof page.id === "string" && typeof page.title === "string").map((page) => ({
+const normalizeHomeWorkspace = (home: HomeWorkspace | undefined, projects: Project[], activeProjectId: string): HomeWorkspace => {
+  const fallbackProject = projects.find((project) => project.id === activeProjectId) ?? projects[0]!;
+  const source = home && Array.isArray(home.pages) ? home.pages : [];
+  const migrated = source.filter((page) => page && typeof page.id === "string" && typeof page.title === "string").map((page) => ({
     ...page,
+    projectId: page.projectId ?? fallbackProject.id,
+    title: !page.parentId && !page.projectId && page.title === "나의 워크스페이스" ? fallbackProject.title : page.title,
     icon: typeof page.icon === "string" ? page.icon : "✦",
     blocks: Array.isArray(page.blocks) ? page.blocks : [],
     widgets: Array.isArray(page.widgets) ? page.widgets : [],
   }));
-  if (pages.length === 0) return createHomeWorkspace();
+  const pages: HomePageData[] = [...migrated];
+  projects.forEach((project) => {
+    if (!pages.some((page) => page.projectId === project.id && !page.parentId)) {
+      pages.push(createHomeWorkspace(project.id, project.title).pages[0]!);
+    }
+  });
+  const activeRoot = pages.find((page) => page.projectId === activeProjectId && !page.parentId) ?? pages[0]!;
   return {
     pages,
-    activePageId: pages.some((page) => page.id === home.activePageId) ? home.activePageId : pages[0]!.id,
-    theme: home.theme === "dark" ? "dark" : "light",
+    activePageId: pages.some((page) => page.id === home?.activePageId && page.projectId === activeProjectId) ? home!.activePageId : activeRoot.id,
+    theme: home?.theme === "dark" ? "dark" : "light",
   };
 };
 

@@ -7,7 +7,7 @@ import {
   Wifi, WifiOff, X,
 } from "lucide-react";
 import {
-  countCharacters, createDocument, initialWorkspace, saveDocument, searchDocuments,
+  countCharacters, createDocument, createHomeWorkspace, initialWorkspace, saveDocument, searchDocuments,
   type DocumentStatus, type Workspace, type WritingDocument,
 } from "@osunnote/domain";
 import { ko } from "./i18n";
@@ -193,6 +193,12 @@ export function App() {
   };
 
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
+  const renameActiveProject = (title: string) => setWorkspace((current) => ({
+    ...current,
+    revision: current.revision + 1,
+    projects: current.projects.map((item) => item.id === project.id ? { ...item, title } : item),
+    home: { ...current.home, pages: current.home.pages.map((item) => item.projectId === project.id && !item.parentId ? { ...item, title, updatedAt: Date.now() } : item) },
+  }));
 
   const updateDocument = (patch: Partial<WritingDocument>, snapshot = false) => {
     if (!document) return;
@@ -296,6 +302,7 @@ export function App() {
       ...current,
       revision: current.revision + 1,
       projects: current.projects.map((item) => item.id === editingProjectId ? { ...item, title, description } : item),
+      home: { ...current.home, pages: current.home.pages.map((item) => item.projectId === editingProjectId && !item.parentId ? { ...item, title, updatedAt: Date.now() } : item) },
     }));
     setEditingProjectId(undefined);
   };
@@ -314,12 +321,14 @@ export function App() {
       folders: ["원고"],
       documents: [created], createdAt: Date.now(),
     };
+    const createdHome = createHomeWorkspace(createdProject.id, createdProject.title);
     setWorkspace((current) => ({
       ...current,
       revision: current.revision + 1,
       activeProjectId: createdProject.id,
       activeDocumentId: created.id,
       projects: [...current.projects, createdProject],
+      home: { ...current.home, activePageId: createdHome.activePageId, pages: [...current.home.pages, ...createdHome.pages] },
     }));
     setView("documents");
     setProjectMenuOpen(false);
@@ -333,6 +342,7 @@ export function App() {
     if (!selected) return;
     setWorkspace((current) => ({
       ...current, activeProjectId: selected.id, activeDocumentId: firstDocument?.id ?? "",
+      home: { ...current.home, activePageId: current.home.pages.find((item) => item.projectId === selected.id && !item.parentId)?.id ?? current.home.activePageId },
     }));
     setSelectedFolder(firstDocument?.folder ?? selected.folders[0] ?? "원고");
     setView("library");
@@ -353,6 +363,11 @@ export function App() {
       activeProjectId: current.activeProjectId === projectId ? replacement.id : current.activeProjectId,
       activeDocumentId: current.activeProjectId === projectId ? replacementDocument?.id ?? "" : current.activeDocumentId,
       projects: current.projects.filter((item) => item.id !== projectId),
+      home: {
+        ...current.home,
+        activePageId: current.activeProjectId === projectId ? current.home.pages.find((item) => item.projectId === replacement.id && !item.parentId)?.id ?? current.home.activePageId : current.home.activePageId,
+        pages: current.home.pages.filter((item) => item.projectId !== projectId),
+      },
     }));
     if (projectId === workspace.activeProjectId) setView("home");
     setProjectMenuOpen(false);
@@ -499,7 +514,6 @@ export function App() {
           <button className="nav-item" disabled><ListTodo size={17} />할 일<span className="coming-soon">준비 중</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
           <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
-          <button className="nav-item" onClick={() => { setView("home"); setMobileMenu(false); }}><LayoutGrid size={17} />워크스페이스</button>
         </nav>
         <nav className="navigation writing-actions" aria-label="글쓰기 빠른 작업">
           <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />새 글<span className="shortcut-label">⌘⌥N</span></button>
@@ -597,6 +611,7 @@ export function App() {
             documents={liveDocuments}
             home={workspace.home}
             onChange={updateHome}
+            onProjectTitleChange={renameActiveProject}
             onOpenDocument={selectDocument}
             onOpenCalendar={() => setView("calendar")}
           />

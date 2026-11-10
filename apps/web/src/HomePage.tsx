@@ -16,6 +16,7 @@ interface HomePageProps {
   documents: WritingDocument[];
   home: HomeWorkspace;
   onChange: (home: HomeWorkspace) => void;
+  onProjectTitleChange: (title: string) => void;
   onOpenDocument: (id: string) => void;
   onOpenCalendar: () => void;
 }
@@ -51,8 +52,10 @@ const pageDepth = (page: HomePageData, pages: HomePageData[]): number => {
   return depth;
 };
 
-export function HomePage({ project, documents, home, onChange, onOpenDocument, onOpenCalendar }: HomePageProps) {
-  const page = home.pages.find((item) => item.id === home.activePageId) ?? home.pages[0]!;
+export function HomePage({ project, documents, home, onChange, onProjectTitleChange, onOpenDocument, onOpenCalendar }: HomePageProps) {
+  const projectPages = home.pages.filter((item) => item.projectId === project.id);
+  const page = projectPages.find((item) => item.id === home.activePageId) ?? projectPages.find((item) => !item.parentId) ?? projectPages[0]!;
+  const isProjectRoot = !page.parentId;
   const [slashBlockId, setSlashBlockId] = useState<string>();
   const [draggedBlockId, setDraggedBlockId] = useState<string>();
   const [draggedWidgetId, setDraggedWidgetId] = useState<string>();
@@ -70,7 +73,7 @@ export function HomePage({ project, documents, home, onChange, onOpenDocument, o
     if (type === "subpage") {
       const now = Date.now();
       const childId = makeId();
-      const child: HomePageData = { id: childId, title: "제목 없는 페이지", icon: "◻", parentId: page.id, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
+      const child: HomePageData = { id: childId, projectId: project.id, title: "제목 없는 페이지", icon: "◻", parentId: page.id, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
       const linked = { ...createBlock("subpage"), content: child.title, linkedPageId: childId };
       const index = afterId ? page.blocks.findIndex((block) => block.id === afterId) + 1 : page.blocks.length;
       const blocks = [...page.blocks]; blocks.splice(Math.max(0, index), 0, linked);
@@ -87,7 +90,7 @@ export function HomePage({ project, documents, home, onChange, onOpenDocument, o
     if (type === "subpage") {
       const now = Date.now();
       const childId = makeId();
-      const child: HomePageData = { id: childId, title: "제목 없는 페이지", icon: "◻", parentId: page.id, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
+      const child: HomePageData = { id: childId, projectId: project.id, title: "제목 없는 페이지", icon: "◻", parentId: page.id, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
       const linked: HomeBlock = { ...createBlock("subpage"), id: blockId, content: child.title, linkedPageId: childId };
       onChange({ ...home, activePageId: childId, pages: [...home.pages.map((item) => item.id === page.id ? { ...item, blocks: item.blocks.map((block) => block.id === blockId ? linked : block), updatedAt: now } : item), child] });
       setSlashBlockId(undefined);
@@ -108,18 +111,19 @@ export function HomePage({ project, documents, home, onChange, onOpenDocument, o
 
   const addPage = (parentId?: string) => {
     const now = Date.now();
-    const created: HomePageData = { id: makeId(), title: "제목 없는 페이지", icon: "◻", parentId, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
+    const created: HomePageData = { id: makeId(), projectId: project.id, title: "제목 없는 페이지", icon: "◻", parentId, blocks: [createBlock("text")], widgets: [], createdAt: now, updatedAt: now };
     onChange({ ...home, activePageId: created.id, pages: [...home.pages, created] });
   };
 
   const deletePage = (pageId: string) => {
-    if (home.pages.length <= 1) return;
+    if (projectPages.length <= 1) return;
     const target = home.pages.find((item) => item.id === pageId);
     if (!target || !window.confirm(`‘${target.title}’ 페이지와 하위 페이지를 삭제할까요?`)) return;
     const deleted = new Set([pageId]); let changed = true;
     while (changed) { changed = false; home.pages.forEach((item) => { if (item.parentId && deleted.has(item.parentId) && !deleted.has(item.id)) { deleted.add(item.id); changed = true; } }); }
     const pages = home.pages.filter((item) => !deleted.has(item.id)).map((item) => ({ ...item, blocks: item.blocks.filter((block) => !block.linkedPageId || !deleted.has(block.linkedPageId)) }));
-    onChange({ ...home, pages, activePageId: pages[0]!.id });
+    const root = pages.find((item) => item.projectId === project.id && !item.parentId)!;
+    onChange({ ...home, pages, activePageId: root.id });
   };
 
   const addWidget = (type: HomeWidgetType) => {
@@ -173,12 +177,12 @@ export function HomePage({ project, documents, home, onChange, onOpenDocument, o
   };
 
   return <section className="workspace-home">
-    <aside className="workspace-page-tree"><header><strong>페이지</strong><button type="button" onClick={() => addPage()} aria-label="새 페이지"><Plus size={15} /></button></header><div>{home.pages.map((item) => <div className={`workspace-page-row ${item.id === page.id ? "active" : ""}`} style={{ paddingLeft: `${7 + pageDepth(item, home.pages) * 14}px` }} key={item.id}><button type="button" onClick={() => onChange({ ...home, activePageId: item.id })}><span>{item.icon}</span>{item.title}</button><button type="button" onClick={() => deletePage(item.id)} disabled={home.pages.length <= 1} aria-label={`${item.title} 삭제`}><Trash2 size={12} /></button></div>)}</div><button type="button" className="workspace-add-page" onClick={() => addPage(page.id)}><Plus size={14} />하위 페이지</button></aside>
+    <aside className="workspace-page-tree"><header><strong>프로젝트 페이지</strong><button type="button" onClick={() => addPage()} aria-label="새 페이지"><Plus size={15} /></button></header><div>{projectPages.map((item) => <div className={`workspace-page-row ${item.id === page.id ? "active" : ""}`} style={{ paddingLeft: `${7 + pageDepth(item, projectPages) * 14}px` }} key={item.id}><button type="button" onClick={() => onChange({ ...home, activePageId: item.id })}><span>{item.icon}</span>{item.parentId ? item.title : project.title}</button><button type="button" onClick={() => deletePage(item.id)} disabled={!item.parentId} aria-label={`${item.title} 삭제`}><Trash2 size={12} /></button></div>)}</div><button type="button" className="workspace-add-page" onClick={() => addPage(page.id)}><Plus size={14} />하위 페이지</button></aside>
     <main className="workspace-canvas">
       {page.cover && <div className="workspace-cover" style={{ backgroundImage: `url(${page.cover})` }} />}
       <div className="workspace-page-toolbar"><button type="button" onClick={() => { const icon = window.prompt("페이지 아이콘", page.icon); if (icon !== null) updatePage({ icon: icon.trim().slice(0, 2) || "◻" }); }}>아이콘</button><button type="button" onClick={() => { const cover = window.prompt("커버 이미지 URL", page.cover ?? ""); if (cover !== null) updatePage({ cover: cover.trim() || undefined }); }}>커버</button><select defaultValue="" onChange={(event) => { applyTemplate(event.target.value); event.target.value = ""; }} aria-label="페이지 템플릿"><option value="" disabled>템플릿</option><option value="blank">빈 페이지</option><option value="weekly">주간 계획</option><option value="project">프로젝트 개요</option></select></div>
       <button type="button" className="workspace-page-icon" onClick={() => { const icon = window.prompt("페이지 아이콘", page.icon); if (icon !== null) updatePage({ icon: icon.trim().slice(0, 2) || "◻" }); }}>{page.icon}</button>
-      <input className="workspace-page-title" value={page.title} onChange={(event) => updatePage({ title: event.target.value })} aria-label="페이지 제목" /><p className="workspace-page-context">{project.title} · 로컬에 자동 저장됨</p>
+      <input className="workspace-page-title" value={isProjectRoot ? project.title : page.title} onChange={(event) => isProjectRoot ? onProjectTitleChange(event.target.value) : updatePage({ title: event.target.value })} aria-label={isProjectRoot ? "프로젝트 이름" : "페이지 제목"} /><p className="workspace-page-context">{isProjectRoot ? project.description || "프로젝트 설명 없음" : project.title} · 로컬에 자동 저장됨</p>
       <section className="workspace-blocks" aria-label="페이지 블록">{page.blocks.map((block) => <div className={`workspace-block type-${block.type}`} key={block.id} draggable onDragStart={() => setDraggedBlockId(block.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => moveBlock(block.id)}><div className="workspace-block-controls"><button type="button" aria-label="블록 이동"><GripVertical size={15} /></button><button type="button" onClick={() => addBlock("text", block.id)} aria-label="아래에 블록 추가"><Plus size={15} /></button></div><div className="workspace-block-content">{renderBlock(block)}{slashBlockId === block.id && <div className="slash-menu">{commands.filter((command) => !block.content.slice(1) || command.label.includes(block.content.slice(1))).map((command) => <button type="button" key={command.type} onClick={() => convertBlock(block.id, command.type)}><command.icon size={17} /><span><strong>{command.label}</strong><small>{command.description}</small></span></button>)}</div>}</div><button type="button" className="workspace-block-delete" onClick={() => updatePage({ blocks: page.blocks.filter((item) => item.id !== block.id) })} aria-label="블록 삭제"><Trash2 size={14} /></button></div>)}<button type="button" className="workspace-add-block" onClick={() => addBlock()}><Plus size={15} />블록 추가</button></section>
       <section className="workspace-widget-section"><header><div><span>대시보드</span><h2>내 작업 한눈에 보기</h2></div><div><button type="button" onClick={() => setWidgetMenuOpen((value) => !value)}><Plus size={14} />위젯 추가</button>{widgetMenuOpen && <div className="widget-add-menu">{(Object.keys(widgetLabels) as HomeWidgetType[]).map((type) => <button type="button" key={type} onClick={() => addWidget(type)} disabled={page.widgets.some((widget) => widget.type === type)}>{widgetLabels[type]}</button>)}</div>}</div></header><div className="workspace-widget-grid">{page.widgets.map(renderWidget)}</div></section>
     </main>

@@ -54,6 +54,7 @@ export interface HomeWidget {
 
 export interface HomePageData {
   id: string;
+  projectId?: string;
   title: string;
   icon: string;
   cover?: string;
@@ -92,7 +93,7 @@ export const createDocument = (title = "제목 없는 글", folder = "원고"): 
   };
 };
 
-export const createHomeWorkspace = (): HomeWorkspace => {
+export const createHomeWorkspace = (projectId?: string, projectTitle = "나의 워크스페이스"): HomeWorkspace => {
   const now = Date.now();
   const pageId = makeId();
   return {
@@ -100,7 +101,8 @@ export const createHomeWorkspace = (): HomeWorkspace => {
     theme: "light",
     pages: [{
       id: pageId,
-      title: "나의 워크스페이스",
+      projectId,
+      title: projectTitle,
       icon: "✦",
       createdAt: now,
       updatedAt: now,
@@ -134,7 +136,7 @@ export const initialWorkspace = (): Workspace => {
     folders: ["원고", "자료"],
     documents: [opening, characters],
   };
-  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace() };
+  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace(project.id, project.title) };
 };
 
 export const saveDocument = (
