@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
   Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
-  Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine, PenTool,
-  RotateCcw, Search, Settings2, ShieldCheck, Sparkles, StickyNote, Sun, Trash2, WalletCards,
+  Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine,
+  RotateCcw, Search, Settings2, ShieldCheck, Sparkles, Sun, Trash2, WalletCards,
   Wifi, WifiOff, X,
 } from "lucide-react";
 import {
-  countCharacters, createDocument, createHomeWorkspace, initialWorkspace, saveDocument, searchDocuments,
-  type DocumentStatus, type Workspace, type WritingDocument,
+  countCharacters, createDocument, createHomeWorkspace, initialWorkspace, makeId, saveDocument, searchDocuments,
+  type DocumentStatus, type HomePageData, type Workspace, type WritingDocument,
 } from "@osunnote/domain";
 import { ko } from "./i18n";
 import { readWorkspace, writeWorkspace } from "./storage";
@@ -33,6 +33,17 @@ const folderHierarchy = (paths: string[]): string[] => {
     parts.forEach((_, index) => expanded.add(parts.slice(0, index + 1).join("/")));
   });
   return [...expanded].sort((a, b) => a.localeCompare(b, "ko-KR"));
+};
+
+const projectPageDepth = (page: HomePageData, pages: HomePageData[]): number => {
+  let depth = 0;
+  let parentId = page.parentId;
+  const seen = new Set<string>();
+  while (parentId && !seen.has(parentId)) {
+    seen.add(parentId); depth += 1;
+    parentId = pages.find((item) => item.id === parentId)?.parentId;
+  }
+  return depth;
 };
 
 const shouldShowWelcome = (): boolean => {
@@ -169,6 +180,7 @@ export function App() {
   const deletedDocuments = project.documents.filter((item) => item.deletedAt);
   const filtered = useMemo(() => searchDocuments(liveDocuments, query), [liveDocuments, query]);
   const folders = folderHierarchy([...(project.folders ?? []), ...filtered.map((item) => item.folder)]);
+  const projectHomePages = workspace.home.pages.filter((item) => item.projectId === project.id);
   const matchingPages = query.trim() ? workspace.home.pages.filter((item) => item.title.toLocaleLowerCase("ko-KR").includes(query.trim().toLocaleLowerCase("ko-KR"))).slice(0, 4) : [];
   const matchingDocuments = query.trim() ? workspace.projects.flatMap((item) => item.documents.filter((entry) => !entry.deletedAt && [entry.title, entry.content, entry.folder, ...entry.tags].join(" ").toLocaleLowerCase("ko-KR").includes(query.trim().toLocaleLowerCase("ko-KR"))).map((entry) => ({ projectId: item.id, document: entry }))).slice(0, 6) : [];
   const selectedFolderPath = folders.includes(selectedFolder) ? selectedFolder : document?.folder ?? folders[0] ?? "원고";
@@ -193,6 +205,27 @@ export function App() {
   };
 
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
+  const selectProjectPage = (pageId: string) => {
+    updateHome({ ...workspace.home, activePageId: pageId });
+    setView("home"); setProjectMenuOpen(false); setMobileMenu(false);
+  };
+  const addProjectPage = () => {
+    const now = Date.now();
+    const root = projectHomePages.find((item) => !item.parentId);
+    const created: HomePageData = { id: makeId(), projectId: project.id, title: "제목 없는 페이지", icon: "◻", parentId: root?.id, blocks: [{ id: makeId(), type: "text", content: "" }], widgets: [], createdAt: now, updatedAt: now };
+    updateHome({ ...workspace.home, activePageId: created.id, pages: [...workspace.home.pages, created] });
+    setView("home"); setProjectMenuOpen(false);
+  };
+  const deleteProjectPage = (pageId: string) => {
+    const target = projectHomePages.find((item) => item.id === pageId);
+    const projectRoot = projectHomePages.find((item) => !item.parentId);
+    if (!target || target.id === projectRoot?.id || !window.confirm(`‘${target.title}’ 페이지와 하위 페이지를 삭제할까요?`)) return;
+    const deleted = new Set([pageId]); let changed = true;
+    while (changed) { changed = false; projectHomePages.forEach((item) => { if (item.parentId && deleted.has(item.parentId) && !deleted.has(item.id)) { deleted.add(item.id); changed = true; } }); }
+    const pages = workspace.home.pages.filter((item) => !deleted.has(item.id)).map((item) => ({ ...item, blocks: item.blocks.filter((block) => !block.linkedPageId || !deleted.has(block.linkedPageId)) }));
+    const root = pages.find((item) => item.projectId === project.id && !item.parentId)!;
+    updateHome({ ...workspace.home, pages, activePageId: root.id });
+  };
   const renameActiveProject = (title: string) => setWorkspace((current) => ({
     ...current,
     revision: current.revision + 1,
@@ -466,6 +499,17 @@ export function App() {
               <div className="project-menu-title"><strong>{project.title}</strong><button type="button" onClick={() => editProject()} aria-label={ko.project.edit} title={ko.project.edit}><PencilLine size={14} /></button></div>
               <p>{project.description || ko.project.noDescription}</p>
               <div className="project-menu-stats"><span>{liveDocuments.length}개 글</span><span>{liveDocuments.reduce((sum, item) => sum + countCharacters(item.content), 0).toLocaleString()}자</span></div>
+              <div className="project-menu-pages">
+                <header><span>프로젝트 페이지</span><button type="button" onClick={addProjectPage} aria-label="프로젝트 페이지 추가" title="페이지 추가"><FilePlus2 size={13} /></button></header>
+                <div>
+                  {projectHomePages.map((item) => (
+                    <div className={`project-menu-page-row ${workspace.home.activePageId === item.id && view === "home" ? "active" : ""}`} style={{ paddingLeft: `${7 + projectPageDepth(item, projectHomePages) * 13}px` }} key={item.id}>
+                      <button type="button" onClick={() => selectProjectPage(item.id)}><span>{item.icon}</span><strong>{item.parentId ? item.title : project.title}</strong></button>
+                      <button type="button" onClick={() => deleteProjectPage(item.id)} disabled={!item.parentId} aria-label={`${item.title} 페이지 삭제`} title={item.parentId ? "페이지 삭제" : "프로젝트 홈은 삭제할 수 없습니다"}><Trash2 size={12} /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="project-menu-projects">
                 <span>{ko.project.all}</span>
                 <div>
@@ -507,11 +551,9 @@ export function App() {
         {query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
         <nav className="navigation module-navigation" aria-label="모듈 탐색">
-          <button className="nav-item" disabled><StickyNote size={17} />메모<span className="coming-soon">준비 중</span></button>
-          <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />글쓰기</button>
+          <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />메모, 글쓰기</button>
           <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><Files size={17} />문서<span>{liveDocuments.length}</span></button>
-          <button className="nav-item" disabled><PenTool size={17} />필기<span className="coming-soon">준비 중</span></button>
-          <button className="nav-item" disabled><ListTodo size={17} />할 일<span className="coming-soon">준비 중</span></button>
+          <button className="nav-item" disabled><ListTodo size={17} />To Do List<span className="coming-soon">준비 중</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
           <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
         </nav>
