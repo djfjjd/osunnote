@@ -428,10 +428,10 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .workspace-database nav button.active { border-bottom-color:var(--green); color:var(--green); font-weight:700; }
 .workspace-database p { margin:13px 0 3px; color:#8a8f88; font-size:10px; line-height:1.6; }
 .slash-menu { position:absolute; z-index:20; top:34px; left:0; width:290px; max-height:330px; overflow:auto; padding:7px; border:1px solid #d8d5cc; border-radius:10px; background:#fbfaf6; box-shadow:0 15px 35px #252b2530; }
-.slash-menu>button { width:100%; min-height:45px; display:flex; align-items:center; gap:10px; padding:6px 8px; border:0; border-radius:7px; background:transparent; text-align:left; }
+.slash-menu>button { width:100%; min-height:56px; display:flex; align-items:center; gap:12px; padding:8px 10px; border:0; border-radius:7px; background:transparent; text-align:left; }
 .slash-menu>button:hover { background:#ebe9e2; }
 .slash-menu>button>span { display:grid; gap:2px; }
-.slash-menu strong { font-size:10px; }.slash-menu small { color:#8b9089; font-size:8px; }
+.slash-menu strong { font-size:13px; }.slash-menu small { color:#747b74; font-size:11px; line-height:1.45; }
 .workspace-add-block { height:36px; display:flex; align-items:center; gap:6px; margin:6px 0 0 38px; padding:0 10px; border:0; border-radius:6px; background:transparent; color:#707770; font-size:13px; font-weight:600; }
 .workspace-add-block:hover { background:#efede7; color:#405f4b; }
 .workspace-widget-section { max-width:900px; margin-top:55px; padding-top:24px; border-top:1px solid #dfdcd3; }
