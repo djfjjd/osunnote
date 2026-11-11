@@ -615,7 +615,7 @@ export function App() {
           <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />새 글<span className="shortcut-label">⌘⌥N</span></button>
         </nav>
         <nav className="navigation module-navigation" aria-label="모듈 탐색">
-          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => openLibrary()}><Files size={17} />글 목록<span>{liveDocuments.length}</span></button>
+          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => openLibrary(selectedFolderPath)}><Files size={17} />글 목록<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "todo" ? "active" : ""}`} onClick={() => { setView("todo"); setMobileMenu(false); }}><ListTodo size={17} />To Do List<span>{workspace.todos.filter((todo) => !todo.completed).length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
           <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
