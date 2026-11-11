@@ -104,7 +104,9 @@ button { cursor: pointer; }
 .text-button { padding:0 11px; font-size:12px; }
 .focus-button kbd { margin-left:3px; padding:2px 5px; border-color:#c8c7bf; background:#faf9f5; color:#626861; font-size:10px; font-weight:600; letter-spacing:0; }
 .avatar { width:30px; height:30px; border:0; border-radius:50%; background:#3d5d49; color:#fff; font-size:12px; margin-left:4px; }
-.save-state { width:112px; flex:0 0 112px; display:flex; align-items:center; gap:5px; margin:0; color:var(--muted); font-size:11px; white-space:nowrap; }
+.save-state { width:126px; flex:0 0 126px; display:flex; align-items:center; gap:5px; margin:0; padding:0; border:0; background:transparent; color:var(--muted); font-size:11px; text-align:left; white-space:nowrap; }
+.save-state:disabled { cursor:default; }
+.save-state.error { color:#a24d44; font-weight:700; }
 .save-state.saving svg { fill:#c7984a; color:#c7984a; animation:pulse 1s infinite; }
 .sidebar { position:relative; min-width:0; background:#f5f2ea; transition:.25s ease; }
 .sidebar.left { grid-column:1; grid-row:2; min-height:0; height:100%; border-right:1px solid var(--line); padding:16px 12px 10px; display:flex; flex-direction:column; overflow:hidden; }
@@ -578,6 +580,13 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .project-edit-actions button:first-child { border:1px solid #d8d5cc; background:#fff; }
 .project-edit-actions button:last-child { border:0; background:var(--green); color:#fff; }
 .project-edit-actions button:disabled { cursor:not-allowed; opacity:.45; }
+.data-safety-dialog>p { margin:17px 0; color:#687068; font-size:12px; line-height:1.65; }
+.data-safety-actions { display:grid; gap:8px; }
+.data-safety-actions>button { min-height:58px; display:grid; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:10px; padding:9px 12px; border:1px solid #d8d5cc; border-radius:9px; background:#fff; text-align:left; }
+.data-safety-actions>button:hover { border-color:#aebbae; background:#f0f4ef; }
+.data-safety-actions>button>span { display:grid; gap:3px; }
+.data-safety-actions strong { font-size:12px; }.data-safety-actions small { color:#747b74; font-size:10px; }
+.data-safety-note { display:block; margin-top:14px; color:#8a6b58; font-size:10px; line-height:1.55; }
 @keyframes pulse{50%{opacity:.3}}
 @media(max-width:1050px){.app{grid-template-columns:240px minmax(450px,1fr)}.sidebar.right{display:none}.editor-shell,.editor-shell.wide-view{grid-column:2}.right-open{display:block}}
 @media(max-width:720px){

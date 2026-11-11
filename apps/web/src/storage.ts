@@ -8,6 +8,8 @@ const DATABASE_VERSION = 2;
 
 let databasePromise: Promise<IDBDatabase> | undefined;
 let pendingWrite: Promise<void> = Promise.resolve();
+const BACKUP_FILE_FORMAT = "osunnote-workspace";
+const BACKUP_FILE_VERSION = 1;
 
 const isWorkspace = (value: unknown): value is Workspace => {
   if (!value || typeof value !== "object") return false;
@@ -141,9 +143,46 @@ const performWrite = async (workspace: Workspace): Promise<void> => {
   });
 };
 
+const wait = (milliseconds: number) => new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds));
+
+const performWriteWithRetry = async (workspace: Workspace, attempts = 3): Promise<void> => {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await performWrite(workspace);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await wait(150 * (attempt + 1));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Workspace write failed");
+};
+
 export const writeWorkspace = (workspace: Workspace): Promise<void> => {
   const snapshot = structuredClone(workspace);
-  const operation = pendingWrite.catch(() => undefined).then(() => performWrite(snapshot));
+  const operation = pendingWrite.catch(() => undefined).then(() => performWriteWithRetry(snapshot));
   pendingWrite = operation;
   return operation;
+};
+
+export const serializeWorkspaceBackup = (workspace: Workspace): string => JSON.stringify({
+  format: BACKUP_FILE_FORMAT,
+  version: BACKUP_FILE_VERSION,
+  exportedAt: new Date().toISOString(),
+  workspace,
+}, null, 2);
+
+export const parseWorkspaceBackup = (source: string): Workspace => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source);
+  } catch {
+    throw new Error("백업 파일이 올바른 JSON 형식이 아닙니다.");
+  }
+  if (!parsed || typeof parsed !== "object") throw new Error("백업 파일 구조를 확인할 수 없습니다.");
+  const envelope = parsed as { format?: unknown; version?: unknown; workspace?: unknown };
+  if (envelope.format !== BACKUP_FILE_FORMAT || envelope.version !== BACKUP_FILE_VERSION) throw new Error("지원하지 않는 OSUNNOTE 백업 파일입니다.");
+  if (!isWorkspace(envelope.workspace)) throw new Error("백업 파일의 워크스페이스 데이터가 손상되었습니다.");
+  return normalizeWorkspace(structuredClone(envelope.workspace));
 };

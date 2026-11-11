@@ -3,7 +3,7 @@ import {
   ArchiveRestore, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
   Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
   Moon, MoreHorizontal, PanelLeftClose, PanelRightClose, PencilLine,
-  RotateCcw, Search, Settings2, ShieldCheck, Sun, Trash2, WalletCards,
+  RotateCcw, Search, Settings2, ShieldCheck, Sun, Trash2, Upload, WalletCards,
   X,
 } from "lucide-react";
 import {
@@ -11,7 +11,7 @@ import {
   type DocumentStatus, type HomePageData, type Workspace, type WritingDocument,
 } from "@osunnote/domain";
 import { ko } from "./i18n";
-import { readWorkspace, writeWorkspace } from "./storage";
+import { parseWorkspaceBackup, readWorkspace, serializeWorkspaceBackup, writeWorkspace } from "./storage";
 import { CalendarPage } from "./CalendarPage";
 import { TopbarCalendar } from "./TopbarCalendar";
 import { HomePage } from "./HomePage";
@@ -59,6 +59,7 @@ const shouldShowWelcome = (): boolean => {
 export function App() {
   const [workspace, setWorkspace] = useState<Workspace>(() => initialWorkspace());
   const [ready, setReady] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [query, setQuery] = useState("");
   const [focus, setFocus] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
@@ -69,6 +70,7 @@ export function App() {
   const [view, setView] = useState<"home" | "library" | "documents" | "todo" | "calendar" | "trash">("home");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [projectManagerOpen, setProjectManagerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string>();
   const [projectTitleDraft, setProjectTitleDraft] = useState("");
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState("");
@@ -81,15 +83,25 @@ export function App() {
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const projectMenuRef = useRef<HTMLDivElement>(null);
   const projectManagerRef = useRef<HTMLDivElement>(null);
+  const backupInputRef = useRef<HTMLInputElement>(null);
   const workspaceRef = useRef(workspace);
   workspaceRef.current = workspace;
 
   useEffect(() => {
-    readWorkspace()
-      .then((stored) => { if (stored) setWorkspace(stored); })
-      .catch(() => setStorageError(true))
-      .finally(() => setReady(true));
-  }, []);
+    setReady(false);
+    setStorageError(false);
+    let timeout = 0;
+    let cancelled = false;
+    const timedRead = Promise.race([
+      readWorkspace(),
+      new Promise<never>((_, reject) => { timeout = window.setTimeout(() => reject(new Error("Workspace load timed out")), 8_000); }),
+    ]);
+    timedRead
+      .then((stored) => { if (!cancelled && stored) setWorkspace(stored); })
+      .catch(() => { if (!cancelled) setStorageError(true); })
+      .finally(() => { window.clearTimeout(timeout); if (!cancelled) setReady(true); });
+    return () => { cancelled = true; window.clearTimeout(timeout); };
+  }, [loadAttempt]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -118,8 +130,11 @@ export function App() {
   useEffect(() => {
     if (!ready || storageError) return;
     setSaveState("saving");
+    const revision = workspace.revision;
     const timer = window.setTimeout(() => {
-      writeWorkspace(workspace).then(() => setSaveState("saved")).catch(() => setSaveState("error"));
+      writeWorkspace(workspace)
+        .then(() => { if (workspaceRef.current.revision === revision) setSaveState("saved"); })
+        .catch(() => { if (workspaceRef.current.revision === revision) setSaveState("error"); });
     }, 280);
     return () => window.clearTimeout(timer);
   }, [workspace, ready, storageError]);
@@ -134,6 +149,16 @@ export function App() {
     globalThis.document.addEventListener("visibilitychange", saveLatest);
     return () => globalThis.document.removeEventListener("visibilitychange", saveLatest);
   }, [ready, storageError]);
+
+  useEffect(() => {
+    if (saveState === "saved") return;
+    const protectUnsavedChanges = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", protectUnsavedChanges);
+    return () => window.removeEventListener("beforeunload", protectUnsavedChanges);
+  }, [saveState]);
 
   useEffect(() => {
     if (!projectMenuOpen && !projectManagerOpen) return;
@@ -200,6 +225,38 @@ export function App() {
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
   const updateTodos = (todos: Workspace["todos"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, todos }));
   const updateCalendarEvents = (calendarEvents: Workspace["calendarEvents"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, calendarEvents }));
+  const retryWorkspaceSave = async () => {
+    setSaveState("saving");
+    try {
+      await writeWorkspace(workspaceRef.current);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  };
+  const downloadWorkspaceBackup = () => {
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+    download(`osunnote-backup-${date}.json`, serializeWorkspaceBackup(workspaceRef.current), "application/json");
+  };
+  const restoreWorkspaceBackup = async (file?: File) => {
+    if (!file) return;
+    try {
+      const restored = parseWorkspaceBackup(await file.text());
+      const documentCount = restored.projects.reduce((sum, item) => sum + item.documents.length, 0);
+      if (!window.confirm(`백업에서 프로젝트 ${restored.projects.length}개와 글 ${documentCount}개를 복원할까요? 현재 데이터는 IndexedDB 직전 백업에 보존됩니다.`)) return;
+      setSaveState("saving");
+      await writeWorkspace(restored);
+      workspaceRef.current = restored;
+      setWorkspace(restored);
+      setSettingsOpen(false);
+      setSaveState("saved");
+    } catch (error) {
+      setSaveState("error");
+      window.alert(error instanceof Error ? error.message : "백업 파일을 복원하지 못했습니다.");
+    } finally {
+      if (backupInputRef.current) backupInputRef.current.value = "";
+    }
+  };
   const openLibrary = (folder?: string) => {
     setLibraryFolder(folder);
     if (folder) setSelectedFolder(folder);
@@ -494,7 +551,7 @@ export function App() {
       <span className="brand-mark">O</span>
       <h1>저장된 글을 안전하게 열지 못했습니다</h1>
       <p>기존 글을 덮어쓰지 않도록 편집을 중단했습니다. 다른 OSUNNOTE 탭을 닫은 뒤 다시 시도해 주세요.</p>
-      <button type="button" onClick={() => window.location.reload()}>다시 시도</button>
+      <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>다시 시도</button>
     </main>
   );
 
@@ -536,10 +593,10 @@ export function App() {
         </div>
         <div className="topbar-project-actions">
           <div className="top-search-wrap"><div className="top-search-button"><Search size={15} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="전체 검색" aria-label="전체 검색" /><kbd>⌘K</kbd></div>{query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}</div>
-          <div className={`save-state ${saveState}`}>
+          <button type="button" className={`save-state ${saveState}`} onClick={() => { if (saveState === "error") void retryWorkspaceSave(); }} disabled={saveState !== "error"} title={saveState === "error" ? "저장 다시 시도" : undefined}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
-            <span>{saveState === "saving" ? "저장 중" : saveState === "error" ? "저장 실패" : ko.saved}</span>
-          </div>
+            <span>{saveState === "saving" ? "저장 중" : saveState === "error" ? "저장 실패 · 다시 시도" : ko.saved}</span>
+          </button>
         </div>
         <TopbarCalendar />
         <div className="topbar-actions">
@@ -641,7 +698,7 @@ export function App() {
         </div>
         <div className="sidebar-footer">
           <button className={`nav-item ${view === "trash" ? "active" : ""}`} onClick={() => { setView("trash"); setMobileMenu(false); }}><Trash2 size={17} />{ko.trash}<span>{deletedDocuments.length}</span></button>
-          <button className="nav-item"><Settings2 size={17} />설정</button>
+          <button className="nav-item" onClick={() => setSettingsOpen(true)}><Settings2 size={17} />설정</button>
         </div>
         <button className="collapse-handle" onClick={() => setLeftOpen(false)} aria-label="왼쪽 패널 닫기"><PanelLeftClose size={16} /></button>
       </aside>
@@ -752,6 +809,21 @@ export function App() {
         </>}
       </aside>
       {!rightOpen && !focus && view === "documents" && document && <button className="edge-open right-open" onClick={() => setRightOpen(true)} aria-label="오른쪽 패널 열기"><Settings2 size={18} /></button>}
+
+      {settingsOpen && (
+        <div className="project-edit-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
+          <section className="project-edit-dialog data-safety-dialog" role="dialog" aria-modal="true" aria-labelledby="data-safety-title">
+            <header><div><span>로컬 데이터 관리</span><h1 id="data-safety-title">백업 및 복원</h1></div><button type="button" aria-label="설정 닫기" onClick={() => setSettingsOpen(false)}><X size={17} /></button></header>
+            <p>전체 프로젝트, 글, 버전, 휴지통, 홈 페이지, 할 일과 일정을 하나의 JSON 파일로 보관합니다.</p>
+            <div className="data-safety-actions">
+              <button type="button" onClick={downloadWorkspaceBackup}><Download size={17} /><span><strong>백업 파일 만들기</strong><small>현재 워크스페이스를 기기에 저장</small></span></button>
+              <button type="button" onClick={() => backupInputRef.current?.click()}><Upload size={17} /><span><strong>백업 파일 복원</strong><small>검사와 확인 후 기존 데이터 교체</small></span></button>
+              <input ref={backupInputRef} hidden type="file" accept="application/json,.json" onChange={(event) => void restoreWorkspaceBackup(event.target.files?.[0])} />
+            </div>
+            <small className="data-safety-note">자동 백업과 클라우드 동기화는 서로 다른 기능입니다. 현재 동기화 서버는 연결되어 있지 않으며, 이 파일은 암호화되지 않습니다.</small>
+          </section>
+        </div>
+      )}
 
       {editingProjectId && (
         <div className="project-edit-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) setEditingProjectId(undefined); }}>
