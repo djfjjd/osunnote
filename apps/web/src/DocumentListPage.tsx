@@ -3,6 +3,7 @@ import { countCharacters, type WritingDocument } from "@osunnote/domain";
 import { ko } from "./i18n";
 
 interface DocumentListPageProps {
+  projectName: string;
   documents: WritingDocument[];
   folder?: string;
   onOpenDocument: (id: string) => void;
@@ -18,7 +19,7 @@ const previewText = (content: string) => content
   .replace(/\s+/g, " ")
   .trim();
 
-export function DocumentListPage({ documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
+export function DocumentListPage({ projectName, documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
   const sorted = documents.filter((document) => !folder || document.folder === folder).sort((a, b) => b.updatedAt - a.updatedAt);
 
   return (
@@ -31,7 +32,7 @@ export function DocumentListPage({ documents, folder, onOpenDocument, onNewDocum
         {sorted.map((document) => (
           <button type="button" key={document.id} onClick={() => onOpenDocument(document.id)}>
             <FileText className="document-list-icon" />
-            <strong>{document.title || ko.home.untitled}</strong>
+            <strong title={`${projectName} / ${document.folder} / ${document.title || ko.home.untitled}`}>{projectName} / {document.folder} / {document.title || ko.home.untitled}</strong>
             <span className="document-list-preview">{previewText(document.content) || ko.documentList.emptyBody}</span>
             <small>{document.folder} · {countCharacters(document.content).toLocaleString()}자</small>
             <time dateTime={new Date(document.createdAt).toISOString()}>{ko.documentList.created} {createdDate(document.createdAt)}</time>
