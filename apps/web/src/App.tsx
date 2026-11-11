@@ -4,7 +4,7 @@ import {
   Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
   Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine,
   RotateCcw, Search, Settings2, ShieldCheck, Sun, Trash2, WalletCards,
-  Wifi, WifiOff, X,
+  X,
 } from "lucide-react";
 import {
   countCharacters, createDocument, createHomeWorkspace, initialWorkspace, makeId, saveDocument, searchDocuments,
@@ -63,7 +63,6 @@ export function App() {
   const [focus, setFocus] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
-  const [online, setOnline] = useState(navigator.onLine);
   const [saveState, setSaveState] = useState<"saving" | "saved" | "error">("saved");
   const [storageError, setStorageError] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -134,12 +133,6 @@ export function App() {
     globalThis.document.addEventListener("visibilitychange", saveLatest);
     return () => globalThis.document.removeEventListener("visibilitychange", saveLatest);
   }, [ready, storageError]);
-
-  useEffect(() => {
-    const update = () => setOnline(navigator.onLine);
-    window.addEventListener("online", update); window.addEventListener("offline", update);
-    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
-  }, []);
 
   useEffect(() => {
     if (!projectMenuOpen && !projectManagerOpen) return;
@@ -532,17 +525,16 @@ export function App() {
             </div>
           )}
         </div>
-        <TopbarCalendar />
-        <div className="topbar-actions">
+        <div className="topbar-project-actions">
           <div className="top-search-wrap"><div className="top-search-button"><Search size={15} /><input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="전체 검색" aria-label="전체 검색" /><kbd>⌘K</kbd></div>{query.trim() && <div className="global-search-results"><strong>통합 검색</strong>{matchingPages.map((item) => <button type="button" key={item.id} onClick={() => { updateHome({ ...workspace.home, activePageId: item.id }); setView("home"); setQuery(""); }}><LayoutGrid size={14} /><span>{item.title}</span><small>페이지</small></button>)}{matchingDocuments.map((item) => <button type="button" key={item.document.id} onClick={() => openGlobalDocument(item.projectId, item.document.id)}><FileText size={14} /><span>{item.document.title}</span><small>글</small></button>)}{matchingPages.length + matchingDocuments.length === 0 && <p>검색 결과가 없습니다.</p>}</div>}</div>
-          <button className="text-button quick-create-button" onClick={addDocument}><FilePlus2 size={16} />빠른 생성</button>
           <div className={`save-state ${saveState}`}>
             {saveState === "saving" ? <Circle size={9} /> : <Check size={13} />}
             <span>{saveState === "saving" ? "저장 중" : saveState === "error" ? "저장 실패" : ko.saved}</span>
           </div>
-          <button className="icon-button" aria-label={online ? "온라인" : ko.offline} title={online ? "온라인" : ko.offline}>
-            {online ? <Wifi size={17} /> : <WifiOff size={17} />}
-          </button>
+        </div>
+        <TopbarCalendar />
+        <div className="topbar-actions">
+          <button className="text-button quick-create-button" onClick={addDocument}><FilePlus2 size={16} />빠른 생성</button>
           <button className="text-button help-button" onClick={() => setShowWelcome(true)}><HelpCircle size={17} />도움말</button>
           <button className="icon-button" onClick={() => updateHome({ ...workspace.home, theme: workspace.home.theme === "dark" ? "light" : "dark" })} aria-label={workspace.home.theme === "dark" ? "라이트 모드" : "다크 모드"} title={workspace.home.theme === "dark" ? "라이트 모드" : "다크 모드"}>{workspace.home.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}</button>
           <button className="text-button focus-button" onClick={() => setFocus((value) => !value)} title="집중 모드 (⌘ Enter)" aria-keyshortcuts="Meta+Enter Control+Enter"><Focus size={17} />{focus ? "나가기" : ko.focus}<kbd>⌘ Enter</kbd></button>

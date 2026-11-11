@@ -72,7 +72,7 @@ button { cursor: pointer; }
 .project-add-button { width:100%; height:34px; border:1px solid #d9d6cd; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; gap:6px; font-size:10px; }
 .project-add-button:hover { background:#edf1eb; color:#3f654c; }
 .topbar-calendar { position:absolute; left:50%; top:50%; z-index:42; transform:translate(-50%,-50%); }
-.topbar-date-button { height:34px; display:flex; align-items:center; gap:7px; padding:0 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:#596059; font:600 12px/1 Inter,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+.topbar-date-button { height:34px; display:flex; align-items:center; gap:7px; padding:0 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:#596059; font:600 14px/1 Inter,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
 .topbar-date-button:hover,.topbar-date-button.open { border-color:#d8d5cc; background:#ebe8df; color:#314638; }
 .topbar-calendar-popup { position:absolute; top:42px; left:50%; width:340px; padding:14px; border:1px solid #d8d5cc; border-radius:14px; background:#fbfaf6; box-shadow:0 18px 48px rgba(30,38,31,.2); transform:translateX(-50%); }
 .topbar-calendar-popup>header { display:grid; grid-template-columns:32px 1fr 32px 28px; align-items:center; gap:4px; margin-bottom:11px; }
@@ -97,13 +97,14 @@ button { cursor: pointer; }
 .event-dot-legend { width:5px; height:5px; border-radius:50%; background:var(--green); }
 .topbar-calendar-popup>footer button { height:26px; padding:0 9px; border:1px solid #d8d5cc; border-radius:7px; background:#fff; color:#536159; font-size:9px; }
 .topbar-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.topbar-project-actions { min-width:0; display:flex; align-items:center; gap:8px; }
 .icon-button,.text-button { border:0; background:transparent; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:8px; height:34px; }
 .icon-button { width:34px; padding:0; }
 .icon-button:hover,.text-button:hover { background:#e9e5db; }
 .text-button { padding:0 11px; font-size:12px; }
 .focus-button kbd { margin-left:3px; padding:2px 5px; border-color:#c8c7bf; background:#faf9f5; color:#626861; font-size:10px; font-weight:600; letter-spacing:0; }
 .avatar { width:30px; height:30px; border:0; border-radius:50%; background:#3d5d49; color:#fff; font-size:12px; margin-left:4px; }
-.save-state { width:112px; flex:0 0 112px; display:flex; align-items:center; gap:5px; margin:0 5px 0 7px; color:var(--muted); font-size:11px; white-space:nowrap; }
+.save-state { width:112px; flex:0 0 112px; display:flex; align-items:center; gap:5px; margin:0; color:var(--muted); font-size:11px; white-space:nowrap; }
 .save-state.saving svg { fill:#c7984a; color:#c7984a; animation:pulse 1s infinite; }
 .sidebar { position:relative; min-width:0; background:#f5f2ea; transition:.25s ease; }
 .sidebar.left { grid-column:1; grid-row:2; min-height:0; height:100%; border-right:1px solid var(--line); padding:16px 12px 10px; display:flex; flex-direction:column; overflow:hidden; }
