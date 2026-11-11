@@ -652,6 +652,7 @@ export function App() {
             onTodosChange={updateTodos}
             onProjectTitleChange={renameActiveProject}
             onOpenDocument={selectDocument}
+            onOpenLibrary={() => setView("library")}
             onOpenCalendar={() => setView("calendar")}
             onOpenTodo={() => setView("todo")}
           />
