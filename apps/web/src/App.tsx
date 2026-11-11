@@ -665,7 +665,7 @@ export function App() {
                 onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragOverFolder(undefined); }}
                 onDrop={(event) => { event.preventDefault(); const documentId = event.dataTransfer.getData("application/x-osunnote-document") || event.dataTransfer.getData("text/plain"); if (documentId) moveDocumentToFolder(documentId, folder); }}
               >
-                <button type="button" className="folder-select" onClick={() => setSelectedFolder(folder)} aria-pressed={selectedFolderPath === folder}>
+                <button type="button" className="folder-select" onClick={() => openLibrary(folder)} aria-pressed={selectedFolderPath === folder}>
                   <Folder size={16} /><span>{folder.split("/").at(-1)}</span><span>{filtered.filter((item) => item.folder === folder).length}</span>
                 </button>
                 <button type="button" onClick={() => addFolder(folder)} aria-label={`${folder}에 하위 폴더 추가`} title="하위 폴더 추가"><FolderPlus size={13} /></button>
@@ -721,7 +721,7 @@ export function App() {
             onOpenTodo={() => setView("todo")}
           />
         ) : view === "library" ? (
-          <DocumentListPage projectName={project.title} activeDocument={document} documents={liveDocuments} folder={libraryFolder} onOpenDocument={selectDocument} onNewDocument={addDocument} />
+          <DocumentListPage projectName={project.title} documents={liveDocuments} folder={libraryFolder} onOpenDocument={selectDocument} onNewDocument={addDocument} />
         ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage events={workspace.calendarEvents} onChange={updateCalendarEvents} /> : view === "trash" ? (
           <section className="trash-page">
             <header>

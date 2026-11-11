@@ -4,7 +4,6 @@ import { ko } from "./i18n";
 
 interface DocumentListPageProps {
   projectName: string;
-  activeDocument?: WritingDocument;
   documents: WritingDocument[];
   folder?: string;
   onOpenDocument: (id: string) => void;
@@ -20,11 +19,11 @@ const previewText = (content: string) => content
   .replace(/\s+/g, " ")
   .trim();
 
-export function DocumentListPage({ projectName, activeDocument, documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
-  const sorted = documents.filter((document) => !folder || document.folder === folder).sort((a, b) => b.updatedAt - a.updatedAt);
+export function DocumentListPage({ projectName, documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
+  const sorted = documents.filter((document) => !folder || document.folder === folder || document.folder.startsWith(`${folder}/`)).sort((a, b) => b.updatedAt - a.updatedAt);
 
   return (<>
-    {activeDocument && <div className="document-header library-document-header"><div className="breadcrumb"><span>{projectName}</span><span>/</span><span>{activeDocument.folder}</span><span>/</span><strong className="breadcrumb-current-title">{activeDocument.title || ko.home.untitled}</strong></div></div>}
+    <div className="document-header library-document-header"><div className="breadcrumb"><span>{projectName}</span><span>/</span><strong className="breadcrumb-current-title">{folder ?? "글 목록"}</strong></div></div>
     <section className="document-list-page">
       <header>
         <div><h1>{ko.documentList.title}</h1></div>
