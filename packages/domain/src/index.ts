@@ -80,6 +80,21 @@ export interface TodoItem {
   updatedAt: number;
 }
 
+export type CalendarRecurrence = "none" | "monthly-day" | "monthly-weekday";
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string;
+  recurrence: CalendarRecurrence;
+  monthDay?: number;
+  weekOfMonth?: number;
+  dayOfWeek?: number;
+  adjustPreviousBusinessDay: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Workspace {
   revision: number;
   projects: Project[];
@@ -87,6 +102,7 @@ export interface Workspace {
   activeDocumentId: string;
   home: HomeWorkspace;
   todos: TodoItem[];
+  calendarEvents: CalendarEvent[];
 }
 
 export const countCharacters = (text: string): number =>
@@ -146,7 +162,7 @@ export const initialWorkspace = (): Workspace => {
     folders: ["원고", "자료"],
     documents: [opening, characters],
   };
-  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace(project.id, project.title), todos: [] };
+  return { revision: 1, projects: [project], activeProjectId: project.id, activeDocumentId: opening.id, home: createHomeWorkspace(project.id, project.title), todos: [], calendarEvents: [] };
 };
 
 export const saveDocument = (
@@ -243,4 +259,32 @@ export const calendarMonth = (year: number, month: number): CalendarDay[] => {
     cursor.setUTCDate(cursor.getUTCDate() + 1);
     return value;
   });
+};
+
+const previousBusinessDay = (date: Date): Date => {
+  const adjusted = new Date(date);
+  while (adjusted.getUTCDay() === 0 || adjusted.getUTCDay() === 6 || koreanHoliday(isoDate(adjusted))) {
+    adjusted.setUTCDate(adjusted.getUTCDate() - 1);
+  }
+  return adjusted;
+};
+
+export const calendarEventOccurrence = (event: CalendarEvent, year: number, month: number): string | undefined => {
+  let occurrence: Date;
+  if (event.recurrence === "none") {
+    const [eventYear, eventMonth, eventDay] = event.date.split("-").map(Number);
+    if (eventYear !== year || eventMonth !== month || !eventDay) return undefined;
+    occurrence = new Date(Date.UTC(eventYear, eventMonth - 1, eventDay));
+  } else if (event.recurrence === "monthly-day") {
+    const day = Math.min(Math.max(event.monthDay ?? 1, 1), new Date(Date.UTC(year, month, 0)).getUTCDate());
+    occurrence = new Date(Date.UTC(year, month - 1, day));
+  } else {
+    const week = Math.min(Math.max(event.weekOfMonth ?? 1, 1), 5);
+    const dayOfWeek = Math.min(Math.max(event.dayOfWeek ?? 1, 0), 6);
+    const first = new Date(Date.UTC(year, month - 1, 1));
+    const day = 1 + (dayOfWeek - first.getUTCDay() + 7) % 7 + (week - 1) * 7;
+    if (day > new Date(Date.UTC(year, month, 0)).getUTCDate()) return undefined;
+    occurrence = new Date(Date.UTC(year, month - 1, day));
+  }
+  return isoDate(event.adjustPreviousBusinessDay ? previousBusinessDay(occurrence) : occurrence);
 };

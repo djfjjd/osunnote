@@ -198,6 +198,7 @@ export function App() {
 
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
   const updateTodos = (todos: Workspace["todos"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, todos }));
+  const updateCalendarEvents = (calendarEvents: Workspace["calendarEvents"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, calendarEvents }));
   const selectProjectPage = (pageId: string) => {
     const targetPage = workspace.home.pages.find((item) => item.id === pageId);
     const targetProject = workspace.projects.find((item) => item.id === targetPage?.projectId);
@@ -658,7 +659,7 @@ export function App() {
           />
         ) : view === "library" ? (
           <DocumentListPage documents={liveDocuments} onOpenDocument={selectDocument} onNewDocument={addDocument} />
-        ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage /> : view === "trash" ? (
+        ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage events={workspace.calendarEvents} onChange={updateCalendarEvents} /> : view === "trash" ? (
           <section className="trash-page">
             <header>
               <div><h1>휴지통</h1></div>

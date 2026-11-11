@@ -48,6 +48,7 @@ const normalizeWorkspace = (workspace: Workspace): Workspace => {
     projects,
     home: normalizeHomeWorkspace(workspace.home, projects, workspace.activeProjectId),
     todos: Array.isArray(workspace.todos) ? workspace.todos : [],
+    calendarEvents: Array.isArray(workspace.calendarEvents) ? workspace.calendarEvents : [],
   };
 };
 

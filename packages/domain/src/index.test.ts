@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  calendarMonth, countCharacters, createDocument, createHomeWorkspace, initialWorkspace, koreanHoliday,
+  calendarEventOccurrence, calendarMonth, countCharacters, createDocument, createHomeWorkspace, initialWorkspace, koreanHoliday,
   saveDocument, searchDocuments,
 } from "./index";
 
@@ -31,6 +31,7 @@ describe("writing domain", () => {
     expect(home.pages[0]!.widgets.map((widget) => widget.type)).toEqual(["tasks", "upcoming", "recent-documents", "finance"]);
     expect(initialWorkspace().home.activePageId).toBeTruthy();
     expect(initialWorkspace().todos).toEqual([]);
+    expect(initialWorkspace().calendarEvents).toEqual([]);
   });
 });
 
@@ -47,5 +48,11 @@ describe("Korean calendar", () => {
     expect(days).toHaveLength(42);
     expect(days[0]).toMatchObject({ date: "2026-11-01", dayOfWeek: 0, inCurrentMonth: true });
     expect(days[6]).toMatchObject({ date: "2026-11-07", dayOfWeek: 6, inCurrentMonth: true });
+  });
+
+  it("calculates monthly events and moves holidays to the previous business day", () => {
+    const event = { id: "event", title: "정산", date: "2026-10-05", recurrence: "monthly-day" as const, monthDay: 5, adjustPreviousBusinessDay: true, createdAt: 1, updatedAt: 1 };
+    expect(calendarEventOccurrence(event, 2026, 10)).toBe("2026-10-02");
+    expect(calendarEventOccurrence({ ...event, recurrence: "monthly-weekday", weekOfMonth: 2, dayOfWeek: 1, adjustPreviousBusinessDay: false }, 2026, 11)).toBe("2026-11-09");
   });
 });
