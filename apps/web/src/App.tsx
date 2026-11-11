@@ -664,7 +664,7 @@ export function App() {
             onOpenTodo={() => setView("todo")}
           />
         ) : view === "library" ? (
-          <DocumentListPage projectName={project.title} documents={liveDocuments} folder={libraryFolder} onOpenDocument={selectDocument} onNewDocument={addDocument} />
+          <DocumentListPage projectName={project.title} activeDocument={document} documents={liveDocuments} folder={libraryFolder} onOpenDocument={selectDocument} onNewDocument={addDocument} />
         ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage events={workspace.calendarEvents} onChange={updateCalendarEvents} /> : view === "trash" ? (
           <section className="trash-page">
             <header>

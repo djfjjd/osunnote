@@ -4,6 +4,7 @@ import { ko } from "./i18n";
 
 interface DocumentListPageProps {
   projectName: string;
+  activeDocument?: WritingDocument;
   documents: WritingDocument[];
   folder?: string;
   onOpenDocument: (id: string) => void;
@@ -19,10 +20,11 @@ const previewText = (content: string) => content
   .replace(/\s+/g, " ")
   .trim();
 
-export function DocumentListPage({ projectName, documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
+export function DocumentListPage({ projectName, activeDocument, documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
   const sorted = documents.filter((document) => !folder || document.folder === folder).sort((a, b) => b.updatedAt - a.updatedAt);
 
-  return (
+  return (<>
+    {activeDocument && <div className="document-header library-document-header"><div className="breadcrumb"><span>{projectName}</span><span>/</span><span>{activeDocument.folder}</span><span>/</span><strong className="breadcrumb-current-title">{activeDocument.title || ko.home.untitled}</strong></div></div>}
     <section className="document-list-page">
       <header>
         <div><h1>{ko.documentList.title}</h1></div>
@@ -32,7 +34,7 @@ export function DocumentListPage({ projectName, documents, folder, onOpenDocumen
         {sorted.map((document) => (
           <button type="button" key={document.id} onClick={() => onOpenDocument(document.id)}>
             <FileText className="document-list-icon" />
-            <strong title={`${projectName} / ${document.folder} / ${document.title || ko.home.untitled}`}>{projectName} / {document.folder} / {document.title || ko.home.untitled}</strong>
+            <strong>{document.title || ko.home.untitled}</strong>
             <span className="document-list-preview">{previewText(document.content) || ko.documentList.emptyBody}</span>
             <small>{document.folder} · {countCharacters(document.content).toLocaleString()}자</small>
             <time dateTime={new Date(document.createdAt).toISOString()}>{ko.documentList.created} {createdDate(document.createdAt)}</time>
@@ -48,5 +50,6 @@ export function DocumentListPage({ projectName, documents, folder, onOpenDocumen
         )}
       </div>
     </section>
+  </>
   );
 }
