@@ -4,6 +4,7 @@ import { ko } from "./i18n";
 
 interface DocumentListPageProps {
   documents: WritingDocument[];
+  folder?: string;
   onOpenDocument: (id: string) => void;
   onNewDocument: () => void;
 }
@@ -17,8 +18,8 @@ const previewText = (content: string) => content
   .replace(/\s+/g, " ")
   .trim();
 
-export function DocumentListPage({ documents, onOpenDocument, onNewDocument }: DocumentListPageProps) {
-  const sorted = [...documents].sort((a, b) => b.updatedAt - a.updatedAt);
+export function DocumentListPage({ documents, folder, onOpenDocument, onNewDocument }: DocumentListPageProps) {
+  const sorted = documents.filter((document) => !folder || document.folder === folder).sort((a, b) => b.updatedAt - a.updatedAt);
 
   return (
     <section className="document-list-page">

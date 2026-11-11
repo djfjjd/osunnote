@@ -245,6 +245,8 @@ kbd { font:10px Inter,sans-serif; border:1px solid #d0cdc4; background:#f7f5ef; 
 .document-header { height:50px; border-bottom:1px solid #ece9e1; display:flex; align-items:center; padding:0 22px; flex:none; }
 .breadcrumb { min-width:0; flex:1; display:flex; align-items:center; gap:8px; color:#7f857e; font-size:13px; }
 .breadcrumb>span { flex:none; }
+.breadcrumb-folder { flex:none; max-width:180px; overflow:hidden; padding:4px 6px; border:0; border-radius:5px; background:transparent; color:#687168; font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+.breadcrumb-folder:hover { background:#e9e7df; color:#36523f; }
 .breadcrumb-title { min-width:90px; width:min(220px,28vw); height:32px; padding:0 6px; overflow:hidden; border:1px solid transparent; border-radius:6px; outline:0; background:transparent; color:#424842; font-size:14px; font-weight:700; text-overflow:ellipsis; }
 .breadcrumb-title:hover { border-color:#ddd9d0; background:#f8f6f0; }
 .breadcrumb-title:focus { border-color:#718c78; background:#fff; box-shadow:0 0 0 2px #dfe8df; }

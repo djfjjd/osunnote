@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArchiveRestore, BookOpen, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
+  ArchiveRestore, CalendarDays, Check, ChevronDown, Circle, Download, FilePlus2, FileText,
   Files, Folder, FolderPlus, Focus, HelpCircle, House, Keyboard, LayoutGrid, ListTodo, Menu,
   Moon, MoreHorizontal, NotebookPen, PanelLeftClose, PanelRightClose, PencilLine,
   RotateCcw, Search, Settings2, ShieldCheck, Sun, Trash2, WalletCards,
@@ -73,6 +73,7 @@ export function App() {
   const [projectTitleDraft, setProjectTitleDraft] = useState("");
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState("");
   const [selectedFolder, setSelectedFolder] = useState("원고");
+  const [libraryFolder, setLibraryFolder] = useState<string>();
   const [dragOverFolder, setDragOverFolder] = useState<string>();
   const [showWelcome, setShowWelcome] = useState(shouldShowWelcome);
   const lastSnapshotAt = useRef(0);
@@ -199,6 +200,12 @@ export function App() {
   const updateHome = (home: Workspace["home"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, home }));
   const updateTodos = (todos: Workspace["todos"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, todos }));
   const updateCalendarEvents = (calendarEvents: Workspace["calendarEvents"]) => setWorkspace((current) => ({ ...current, revision: current.revision + 1, calendarEvents }));
+  const openLibrary = (folder?: string) => {
+    setLibraryFolder(folder);
+    if (folder) setSelectedFolder(folder);
+    setView("library");
+    setMobileMenu(false);
+  };
   const selectProjectPage = (pageId: string) => {
     const targetPage = workspace.home.pages.find((item) => item.id === pageId);
     const targetProject = workspace.projects.find((item) => item.id === targetPage?.projectId);
@@ -384,6 +391,7 @@ export function App() {
       home: { ...current.home, activePageId: current.home.pages.find((item) => item.projectId === selected.id && !item.parentId)?.id ?? current.home.activePageId },
     }));
     setSelectedFolder(firstDocument?.folder ?? selected.folders[0] ?? "원고");
+    setLibraryFolder(undefined);
     setView("library");
     setProjectMenuOpen(false);
     setProjectManagerOpen(false);
@@ -546,16 +554,15 @@ export function App() {
       <aside className={`sidebar left ${leftOpen ? "" : "collapsed"} ${mobileMenu ? "mobile-open" : ""}`}>
         <div className="sidebar-mobile-head"><button type="button" className="brand brand-home" onClick={() => { setView("home"); setMobileMenu(false); }} aria-label="OSUNNOTE 홈으로 이동"><span className="brand-mark">O</span>{ko.appName}</button><button className="icon-button" onClick={() => setMobileMenu(false)}><X /></button></div>
         <button className="home-button" onClick={() => { setView("home"); setMobileMenu(false); }}><House size={17} />{ko.home.nav}</button>
+        <nav className="navigation writing-actions" aria-label="글쓰기 빠른 작업">
+          <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />새 글<span className="shortcut-label">⌘⌥N</span></button>
+        </nav>
         <nav className="navigation module-navigation" aria-label="모듈 탐색">
           <button className={`nav-item ${view === "documents" ? "active" : ""}`} onClick={() => document ? selectDocument(document.id) : addDocument()}><NotebookPen size={17} />메모, 글쓰기</button>
-          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><Files size={17} />문서<span>{liveDocuments.length}</span></button>
+          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => openLibrary()}><Files size={17} />글 목록<span>{liveDocuments.length}</span></button>
           <button className={`nav-item ${view === "todo" ? "active" : ""}`} onClick={() => { setView("todo"); setMobileMenu(false); }}><ListTodo size={17} />To Do List<span>{workspace.todos.filter((todo) => !todo.completed).length}</span></button>
           <button className={`nav-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setMobileMenu(false); }}><CalendarDays size={17} />캘린더</button>
           <button className="nav-item" disabled><WalletCards size={17} />가계부<span className="coming-soon">준비 중</span></button>
-        </nav>
-        <nav className="navigation writing-actions" aria-label="글쓰기 빠른 작업">
-          <button className="nav-item" onClick={addDocument} title="새 글 (⌘⌥N)" aria-keyshortcuts="Meta+Alt+N Control+Alt+N"><FilePlus2 size={17} />새 글<span className="shortcut-label">⌘⌥N</span></button>
-          <button className={`nav-item ${view === "library" ? "active" : ""}`} onClick={() => setView("library")}><BookOpen size={17} />모든 글<span>{liveDocuments.length}</span></button>
         </nav>
         <div className="tree-label">
           <span>프로젝트</span>
@@ -653,12 +660,12 @@ export function App() {
             onTodosChange={updateTodos}
             onProjectTitleChange={renameActiveProject}
             onOpenDocument={selectDocument}
-            onOpenLibrary={() => setView("library")}
+            onOpenLibrary={() => openLibrary()}
             onOpenCalendar={() => setView("calendar")}
             onOpenTodo={() => setView("todo")}
           />
         ) : view === "library" ? (
-          <DocumentListPage documents={liveDocuments} onOpenDocument={selectDocument} onNewDocument={addDocument} />
+          <DocumentListPage documents={liveDocuments} folder={libraryFolder} onOpenDocument={selectDocument} onNewDocument={addDocument} />
         ) : view === "todo" ? <TodoPage todos={workspace.todos} onChange={updateTodos} /> : view === "calendar" ? <CalendarPage events={workspace.calendarEvents} onChange={updateCalendarEvents} /> : view === "trash" ? (
           <section className="trash-page">
             <header>
@@ -666,7 +673,7 @@ export function App() {
               <button className="empty-trash-button" onClick={emptyTrash} disabled={deletedDocuments.length === 0}><Trash2 size={16} />휴지통 비우기</button>
             </header>
             {deletedDocuments.length === 0 ? (
-              <div className="trash-empty"><span><Trash2 size={24} /></span><strong>휴지통이 비어 있습니다</strong><p>삭제한 글이 이곳에 표시됩니다.</p><button onClick={() => setView("documents")}>모든 글로 돌아가기</button></div>
+              <div className="trash-empty"><span><Trash2 size={24} /></span><strong>휴지통이 비어 있습니다</strong><p>삭제한 글이 이곳에 표시됩니다.</p><button onClick={() => openLibrary()}>글 목록으로 돌아가기</button></div>
             ) : (
               <div className="trash-list">
                 {deletedDocuments.map((item) => (
@@ -684,7 +691,7 @@ export function App() {
         ) : document ? (<>
         <div className="document-header">
           <div className="breadcrumb">
-            <span>{project.title}</span><span>/</span><span>{document.folder}</span><span>/</span>
+            <span>{project.title}</span><span>/</span><button type="button" className="breadcrumb-folder" onClick={() => openLibrary(document.folder)}>{document.folder}</button><span>/</span>
             <input className="breadcrumb-title" value={document.title} onChange={(event) => updateDocument({ title: event.target.value })} aria-label="글 제목" />
           </div>
           <div className="document-header-meta"><span className={`status-pill ${statusTone[document.status]}`}>{statusLabel[document.status]}</span><span>{new Date(document.updatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" })} 수정</span></div>
