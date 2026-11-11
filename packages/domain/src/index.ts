@@ -43,7 +43,7 @@ export interface HomeBlock {
   databaseView?: DatabaseView;
 }
 
-export type HomeWidgetType = "tasks" | "upcoming" | "recent-documents" | "finance";
+export type HomeWidgetType = "tasks" | "completed-tasks" | "upcoming" | "recent-documents" | "finance";
 export type HomeWidgetSize = "small" | "medium" | "wide";
 
 export interface HomeWidget {
