@@ -54,5 +54,6 @@ describe("Korean calendar", () => {
     const event = { id: "event", title: "정산", date: "2026-10-05", recurrence: "monthly-day" as const, monthDay: 5, adjustPreviousBusinessDay: true, createdAt: 1, updatedAt: 1 };
     expect(calendarEventOccurrence(event, 2026, 10)).toBe("2026-10-02");
     expect(calendarEventOccurrence({ ...event, recurrence: "monthly-weekday", weekOfMonth: 2, dayOfWeek: 1, adjustPreviousBusinessDay: false }, 2026, 11)).toBe("2026-11-09");
+    expect(calendarEventOccurrence({ ...event, recurrence: "monthly-weekday", weekOfMonth: 5, dayOfWeek: 1, adjustPreviousBusinessDay: false }, 2026, 2)).toBe("2026-02-23");
   });
 });

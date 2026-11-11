@@ -282,8 +282,10 @@ export const calendarEventOccurrence = (event: CalendarEvent, year: number, mont
     const week = Math.min(Math.max(event.weekOfMonth ?? 1, 1), 5);
     const dayOfWeek = Math.min(Math.max(event.dayOfWeek ?? 1, 0), 6);
     const first = new Date(Date.UTC(year, month - 1, 1));
-    const day = 1 + (dayOfWeek - first.getUTCDay() + 7) % 7 + (week - 1) * 7;
-    if (day > new Date(Date.UTC(year, month, 0)).getUTCDate()) return undefined;
+    const last = new Date(Date.UTC(year, month, 0));
+    const day = week === 5
+      ? last.getUTCDate() - (last.getUTCDay() - dayOfWeek + 7) % 7
+      : 1 + (dayOfWeek - first.getUTCDay() + 7) % 7 + (week - 1) * 7;
     occurrence = new Date(Date.UTC(year, month - 1, day));
   }
   return isoDate(event.adjustPreviousBusinessDay ? previousBusinessDay(occurrence) : occurrence);
